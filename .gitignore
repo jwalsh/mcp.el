@@ -1,0 +1,25 @@
+# Emacs backup files
+*~
+\#*\#
+.\#*
+*.bak
+
+# Compiled Elisp
+*.elc
+
+# Auto-generated directories
+/examples/
+auto-save-list/
+*.cache
+
+# Personal configuration
+.dir-locals.el
+
+# Org mode
+.org-id-locations
+*_archive
+*.org-cache/
+
+# Project-specific
+/src/
+/dist/
