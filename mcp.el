@@ -619,3 +619,10 @@ ERROR-CALLBACK is an optional function to call if an error occurs during the req
                                       code message)))))
 (provide 'mcp)
 ;;; mcp.el ends here
+
+(defun mcp-ensure-server ()
+  "Ensure server connection is available."
+  (gethash "filesystem" mcp-server-connections))
+
+(provide 'mcp)
+;;; mcp.el ends here
