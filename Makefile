@@ -20,7 +20,7 @@ all: build test
 # Tangle README.org specifically
 readme: init
 	$(BATCH) --eval "(require 'org)" \
-	        --eval '(org-babel-tangle-file "README.org")'
+		--eval '(org-babel-tangle-file "README.org")'
 
 # Clean built files
 clean:
@@ -33,28 +33,28 @@ init:
 # Tangle org files
 tangle: init
 	$(BATCH) --eval "(require 'org)" \
-	        --eval '(mapc #'\''org-babel-tangle-file (list "servers.org" "README.org"))'
+		--eval '(mapc #'\''org-babel-tangle-file (list "servers.org" "README.org"))'
 
 # Byte compile
 compile: init tangle
 	$(BATCH) -L . \
-	        --eval "(setq byte-compile-error-on-warn t)" \
-	        -f batch-byte-compile $(EL_FILES)
+		--eval "(setq byte-compile-error-on-warn t)" \
+		-f batch-byte-compile $(EL_FILES)
 
 # Run tests
 test: compile
 	$(BATCH) -L . -L $(TEST_DIR) \
-	        --eval "(setq load-prefer-newer t)" \
-	        -l ert \
-	        -l $(TEST_DIR)/test-mcp.el \
-	        -f ert-run-tests-batch-and-exit
+		--eval "(setq load-prefer-newer t)" \
+		-l ert \
+		-l $(TEST_DIR)/test-mcp.el \
+		-f ert-run-tests-batch-and-exit
 
 # Build package
 build: compile
 	mkdir -p $(BUILD_DIR)
 	cp $(PACKAGE_NAME).el $(BUILD_DIR)/
 	cp -r $(EXAMPLES_DIR) $(BUILD_DIR)/
-	cp README.md LICENSE $(BUILD_DIR)/ 2>/dev/null || true
+	cp README.org LICENSE $(BUILD_DIR)/ 2>/dev/null || true
 
 # Create distribution package
 dist: build
@@ -64,36 +64,36 @@ dist: build
 # Install dependencies
 deps:
 	$(BATCH) --eval "(require 'package)" \
-	        --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
-	        --eval "(package-initialize)" \
-	        --eval "(package-refresh-contents)" \
-	        --eval "(package-install 'jsonrpc)"
+		--eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
+		--eval "(package-initialize)" \
+		--eval "(package-refresh-contents)" \
+		--eval "(package-install 'jsonrpc)"
 
 # Run example
 run: compile
 	$(EMACS) -Q -L . -L $(EXAMPLES_DIR)/filesystem \
-	        -l $(PACKAGE_NAME).el \
-	        -l $(EXAMPLES_DIR)/filesystem/mcp-fs-connection.el \
-	        --eval "(mcp-fs-connect)"
+		-l $(PACKAGE_NAME).el \
+		-l $(EXAMPLES_DIR)/filesystem/mcp-fs-connection.el \
+		--eval "(mcp-fs-connect)"
 
 # Development server for testing
 dev: compile
 	$(EMACS) -Q -L . -L $(EXAMPLES_DIR) \
-	        -l $(PACKAGE_NAME).el \
-	        --eval "(require 'mcp-fs-connection)" \
-	        --eval "(mcp-fs-connect)"
+		-l $(PACKAGE_NAME).el \
+		--eval "(require 'mcp-fs-connection)" \
+		--eval "(mcp-fs-connect)"
 
 # Check style
 lint:
 	$(BATCH) -l package-lint \
-	        --eval "(setq package-lint-main-file \"$(PACKAGE_NAME).el\")" \
-	        -f package-lint-batch-and-exit $(EL_FILES)
+		--eval "(setq package-lint-main-file \"$(PACKAGE_NAME).el\")" \
+		-f package-lint-batch-and-exit $(EL_FILES)
 
 # Generate documentation
 docs: init
 	$(BATCH) -l ox-md \
-	        --eval "(org-babel-tangle-file \"servers.org\")" \
-	        --eval "(with-current-buffer (find-file \"servers.org\") (org-md-export-to-markdown))"
+		--eval "(org-babel-tangle-file \"servers.org\")" \
+		--eval "(with-current-buffer (find-file \"servers.org\") (org-md-export-to-markdown))"
 
 # Package for MELPA
 package: clean compile test docs dist
