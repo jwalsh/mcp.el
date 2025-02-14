@@ -1,0 +1,378 @@
+#+TITLE: MCP Server Examples
+#+AUTHOR: Jason Walsh
+#+DATE: 2025-02-13
+#+PROPERTY: header-args:elisp :comments both
+#+STARTUP: overview
+
+* Filesystem Server
+** Connection
+#+begin_src elisp :tangle examples/filesystem/connection.el :mkdirp t
+;;; connection.el --- Filesystem MCP connection -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Basic connection setup for the MCP filesystem server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-fs-connect ()
+  "Connect to the filesystem MCP server."
+  (interactive)
+  (mcp-connect-server 
+   "filesystem" 
+   "npx" 
+   (list "-y" 
+         "@modelcontextprotocol/server-filesystem" 
+         (expand-file-name "~/epub/"))
+   :initial-callback
+   (lambda (connection)
+     (message "Connected to %s" (jsonrpc-name connection)))))
+
+(provide 'mcp-fs-connection)
+;;; connection.el ends here
+#+end_src
+
+** List Directory
+#+begin_src elisp :tangle examples/filesystem/list.el :mkdirp t
+;;; list.el --- Directory listing -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Directory listing functionality for MCP filesystem
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-fs-list (path)
+  "List contents of PATH."
+  (interactive "DDirectory: ")
+  (when-let* ((connection (mcp-ensure-server)))
+    (mcp-async-call-tool 
+     connection 
+     "list_directory"
+     (list :path (expand-file-name path))
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP Dir*")
+         (erase-buffer)
+         (when-let* ((content (plist-get result :content)))
+           (dolist (item content)
+             (when (string= (plist-get item :type) "text")
+               (insert (plist-get item :text) "\n"))))
+         (display-buffer (current-buffer))))
+     (lambda (code message)
+       (message "Error: %s - %s" code message)))))
+
+(provide 'mcp-fs-list)
+;;; list.el ends here
+#+end_src
+
+** Read File
+#+begin_src elisp :tangle examples/filesystem/read.el :mkdirp t
+;;; read.el --- File reading -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; File reading functionality for MCP filesystem
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-fs-read (path)
+  "Read contents of file at PATH."
+  (interactive "fFile: ")
+  (when-let* ((connection (mcp-ensure-server)))
+    (mcp-async-call-tool 
+     connection 
+     "read_file"
+     (list :path (expand-file-name path))
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP File*")
+         (erase-buffer)
+         (when-let* ((content (plist-get result :content)))
+           (dolist (item content)
+             (when (string= (plist-get item :type) "text")
+               (insert (plist-get item :text) "\n"))))
+         (display-buffer (current-buffer))))
+     (lambda (code message)
+       (message "Error: %s - %s" code message)))))
+
+(provide 'mcp-fs-read)
+;;; read.el ends here
+#+end_src
+
+* Git Server
+** Connection
+#+begin_src elisp :tangle examples/git/connection.el :mkdirp t
+;;; connection.el --- Git MCP connection -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Basic connection setup for the MCP git server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-git-connect ()
+  "Connect to the Git MCP server."
+  (interactive)
+  (mcp-connect-server 
+   "git" 
+   "npx" 
+   (list "-y" "mcp-server-git")
+   :initial-callback
+   (lambda (connection)
+     (message "Connected to %s" (jsonrpc-name connection)))))
+
+(provide 'mcp-git-connection)
+;;; connection.el ends here
+#+end_src
+
+** Status
+#+begin_src elisp :tangle examples/git/status.el :mkdirp t
+;;; status.el --- Git status -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Git status functionality for MCP git server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-git-status (repo-path)
+  "Show git status for REPO-PATH."
+  (interactive "DRepository: ")
+  (when-let* ((connection (mcp-ensure-server)))
+    (mcp-async-call-tool 
+     connection 
+     "git_status"
+     (list :repo_path (expand-file-name repo-path))
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP Git Status*")
+         (erase-buffer)
+         (when-let* ((content (plist-get result :content)))
+           (dolist (item content)
+             (when (string= (plist-get item :type) "text")
+               (insert (plist-get item :text) "\n"))))
+         (display-buffer (current-buffer))))
+     (lambda (code message)
+       (message "Error: %s - %s" code message)))))
+
+(provide 'mcp-git-status)
+;;; status.el ends here
+#+end_src
+
+** Log
+#+begin_src elisp :tangle examples/git/log.el :mkdirp t
+;;; log.el --- Git log -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Git log functionality for MCP git server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-git-log (repo-path &optional max-count)
+  "Show git log for REPO-PATH, limited to MAX-COUNT entries."
+  (interactive "DRepository: \nnMax entries (default 10): ")
+  (when-let* ((connection (mcp-ensure-server)))
+    (mcp-async-call-tool 
+     connection 
+     "git_log"
+     (list :repo_path (expand-file-name repo-path)
+           :max_count (or max-count 10))
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP Git Log*")
+         (erase-buffer)
+         (when-let* ((content (plist-get result :content)))
+           (dolist (item content)
+             (when (string= (plist-get item :type) "text")
+               (insert (plist-get item :text) "\n"))))
+         (display-buffer (current-buffer))))
+     (lambda (code message)
+       (message "Error: %s - %s" code message)))))
+
+(provide 'mcp-git-log)
+;;; log.el ends here
+#+end_src
+
+* Memory Server 
+** Connection
+#+begin_src elisp :tangle examples/memory/connection.el :mkdirp t
+;;; connection.el --- Memory MCP connection -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Basic connection setup for the MCP memory server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-memory-connect ()
+  "Connect to the Memory MCP server."
+  (interactive)
+  (mcp-connect-server 
+   "memory" 
+   "npx" 
+   (list "-y" "@modelcontextprotocol/server-memory")
+   :initial-callback
+   (lambda (connection)
+     (message "Connected to %s" (jsonrpc-name connection)))))
+
+(provide 'mcp-memory-connection)
+;;; connection.el ends here
+#+end_src
+
+** Create Entity
+#+begin_src elisp :tangle examples/memory/entity.el :mkdirp t
+;;; entity.el --- Memory entity management -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Entity management for MCP memory server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-memory-create-entity (name type observations)
+  "Create entity with NAME, TYPE and OBSERVATIONS."
+  (interactive "sEntity name: \nsEntity type: \nsObservations (comma-separated): ")
+  (when-let* ((connection (mcp-ensure-server)))
+    (mcp-async-call-tool 
+     connection 
+     "create_entities"
+     (list :entities 
+           (list (list :name name
+                      :entityType type
+                      :observations (split-string observations ","))))
+     (lambda (result)
+       (message "Created entity %s" name))
+     (lambda (code message)
+       (message "Error: %s - %s" code message)))))
+
+(provide 'mcp-memory-entity)
+;;; entity.el ends here
+#+end_src
+
+** Search Nodes
+#+begin_src elisp :tangle examples/memory/search.el :mkdirp t
+;;; search.el --- Memory search -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Search functionality for MCP memory server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-memory-search (query)
+  "Search memory nodes with QUERY."
+  (interactive "sSearch query: ")
+  (when-let* ((connection (mcp-ensure-server)))
+    (mcp-async-call-tool 
+     connection 
+     "search_nodes"
+     (list :query query)
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP Memory Search*")
+         (erase-buffer)
+         (when-let* ((content (plist-get result :content)))
+           (dolist (item content)
+             (when (string= (plist-get item :type) "text")
+               (insert (plist-get item :text) "\n"))))
+         (display-buffer (current-buffer))))
+     (lambda (code message)
+       (message "Error: %s - %s" code message)))))
+
+(provide 'mcp-memory-search)
+;;; search.el ends here
+#+end_src
+
+* Time Server
+** Connection
+#+begin_src elisp :tangle examples/time/connection.el :mkdirp t
+;;; connection.el --- Time MCP connection -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Basic connection setup for the MCP time server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-time-connect ()
+  "Connect to the Time MCP server."
+  (interactive)
+  (mcp-connect-server 
+   "time" 
+   "npx" 
+   (list "-y" "mcp-server-time")
+   :initial-callback
+   (lambda (connection)
+     (message "Connected to %s" (jsonrpc-name connection)))))
+
+(provide 'mcp-time-connection)
+;;; connection.el ends here
+#+end_src
+
+** Current Time
+#+begin_src elisp :tangle examples/time/current.el :mkdirp t
+;;; current.el --- Current time functions -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Current time functionality for MCP time server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-time-current (timezone)
+  "Get current time in TIMEZONE."
+  (interactive "sTimezone (e.g. America/New_York): ")
+  (when-let* ((connection (mcp-ensure-server)))
+    (mcp-async-call-tool 
+     connection 
+     "get_current_time"
+     (list :timezone timezone)
+     (lambda (result)
+       (message "Current time in %s: %s" 
+                timezone 
+                (plist-get result :datetime)))
+     (lambda (code message)
+       (message "Error: %s - %s" code message)))))
+
+(provide 'mcp-time-current)
+;;; current.el ends here
+#+end_src
+
+** Time Convert
+#+begin_src elisp :tangle examples/time/convert.el :mkdirp t
+;;; convert.el --- Time conversion -*- lexical-binding: t -*-
+
+;;; Commentary:
+;; Time conversion functionality for MCP time server
+
+;;; Code:
+
+(require 'mcp)
+
+(defun mcp-time-convert (source-time source-zone target-zone)
+  "Convert SOURCE-TIME from SOURCE-ZONE to TARGET-ZONE."
+  (interactive "sTime (HH:MM): \nsSource timezone: \nsTarget timezone: ")
+  (when-let* ((connection (mcp-ensure-server)))
+    (mcp-async-call-tool 
+     connection 
+     "convert_time"
+     (list :source_timezone source-zone
+           :time source-time
+           :target_timezone target-zone)
+     (lambda (result)
+       (message "Time conversion: %s"
+                (plist-get result :target)))
+     (lambda (code message)
+       (message "Error: %s - %s" code message)))))
+
+(provide 'mcp-time-convert)
+;;; convert.el ends here
+#+end_src
