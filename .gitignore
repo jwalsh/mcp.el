@@ -7,6 +7,9 @@
 # Compiled Elisp
 *.elc
 
+# Builders
+_.sh
+
 # Auto-generated directories
 /examples/
 auto-save-list/
