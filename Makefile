@@ -16,14 +16,37 @@ EL_FILES = $(wildcard *.el) $(wildcard $(EXAMPLES_DIR)/*/*.el)
 TESTS = $(wildcard $(TEST_DIR)/*.el)
 ORG_FILES = servers.org README.org
 
-## help            Show this help message
+## help            Show this help message and dependency versions
 help:
 	@echo "MCP.el - Model Context Protocol for Emacs"
 	@echo
 	@echo "Usage: make [target]"
 	@echo
+	@echo "Dependencies:"
+	@echo "  Current:"
+	@$(EMACS) --version | head -n 1
+	@node --version | tr -d '\n' && echo " (node)"
+	@npm --version | tr -d '\n' && echo " (npm)"
+	@echo
+	@echo "  Tested with:"
+	@echo "    Emacs 30.0.50 (build 1, aarch64-unknown-linux-gnu, GTK+ Version 3.24.33, cairo version 1.16.0)"
+	@echo "    node v20.10.0"
+	@echo "    npm 10.2.3"
+	@echo
 	@echo "Targets:"
 	@grep -E '^##' $(MAKEFILE_LIST) | grep -v "grep" | sed -E 's/^## //' | column -t -s ':'
+
+## versions        Show dependency versions in detail
+versions:
+	@echo "Dependency Versions:"
+	@echo "  Emacs:"
+	@$(EMACS) --version
+	@echo "\n  Node:"
+	@node --version
+	@echo "  NPM:"
+	@npm --version
+	@echo "\n  System:"
+	@uname -a
 
 ## all             Build and test the package
 all: build test
@@ -109,4 +132,4 @@ test-init:
 	[ -f $(TEST_DIR)/test-mcp.el ] || \
 	echo '(require '\''ert)\n(require '\''mcp)\n\n(ert-deftest test-mcp-version () \n  "Test MCP version."\n  (should (string= *MCP-VERSION* "2024-11-05")))' > $(TEST_DIR)/test-mcp.el
 
-.PHONY: help all clean init tangle compile test build dist deps run dev lint docs package test-init
+.PHONY: help versions all clean init tangle compile test build dist deps run dev lint docs package test-init
