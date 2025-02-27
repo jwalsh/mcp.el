@@ -1,0 +1,57 @@
+{
+	"mcpServers": {
+		"fetch": {
+			"command": "uvx",
+			"args": [
+				"mcp-server-fetch"
+			]
+		},
+		"filesystem": {
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-filesystem",
+				"$HOME/projects",
+				"$HOME/Documents",
+				"/Users/jasonwalsh/.anthropic/sandbox/jwalsh/mcp.el"
+			],
+			"command": "npx"
+		},
+		"git": {
+			"args": [
+				"mcp-server-git"
+			],
+			"command": "uvx"
+		},
+		"github": {
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-github"
+			],
+			"command": "npx",
+			"env": {
+				"GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_TOKEN"
+			}
+		},
+		"iterm-mcp": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"iterm-mcp"
+			]
+		},
+		"memory": {
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-memory"
+			],
+			"command": "npx"
+		},
+		"sequential-thinking": {
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-sequential-thinking"
+			],
+			"command": "npx"
+		}
+	}
+}

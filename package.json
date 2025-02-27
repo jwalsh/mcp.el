@@ -1,0 +1,25 @@
+{
+  "name": "mcp.el",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node run-servers.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@modelcontextprotocol/server-filesystem": "latest",
+    "@modelcontextprotocol/server-github": "latest",
+    "@modelcontextprotocol/server-time": "latest",
+    "@modelcontextprotocol/server-memory": "latest",
+    "@modelcontextprotocol/server-fetch": "latest",
+    "@modelcontextprotocol/server-sqlite": "latest"
+  }
+}
