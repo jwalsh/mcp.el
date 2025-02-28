@@ -26,3 +26,9 @@ auto-save-list/
 # Project-specific
 /src/
 /dist/
+/generated/
+
+# Tangled files from org-mode
+*.mmd
+*.sh
+*.el

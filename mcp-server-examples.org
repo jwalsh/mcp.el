@@ -1,0 +1,820 @@
+#+TITLE: Model Context Protocol (MCP) Examples in Org Mode
+#+AUTHOR: Jason Walsh
+#+OPTIONS: toc:2 num:t
+#+PROPERTY: header-args:mcp :session *mcp-session* :exports both
+
+* Introduction
+
+This document demonstrates how to use various MCP servers within org-mode using the ~ob-mcp~ package. The examples cover different MCP servers configured in your environment.
+
+First, let's load the MCP configuration:
+
+#+begin_src emacs-lisp :results silent
+(require 'ob-mcp)
+
+;; Load the MCP server configuration
+(ob-mcp-load-config-from-string 
+ '{
+  "mcpServers": {
+    "fetch": {
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "command": "uvx"
+    },
+    "filesystem": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "$HOME/projects",
+        "$HOME/Documents",
+        "$HOME/.anthropic/sandbox/jwalsh/mcp.el"
+      ],
+      "command": "npx"
+    },
+    "git": {
+      "args": [
+        "mcp-server-git"
+      ],
+      "command": "uvx"
+    },
+    "github": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "command": "npx",
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_TOKEN"
+      }
+    },
+    "iterm": {
+      "args": [
+        "-y",
+        "iterm-mcp"
+      ],
+      "command": "npx"
+    },
+    "memory": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "command": "npx"
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "qrcode": {
+      "args": [
+        "-y",
+        "@jwalsh/mcp-server-qrcode"
+      ],
+      "command": "npx"
+    },
+    "qrcode-dev": {
+      "args": [
+        "$HOME/projects/mcp-server-qrcode/build/cli.js"
+      ],
+      "command": "node"
+    },
+    "sequential-thinking": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "command": "npx"
+    }
+  }
+}')
+#+end_src
+
+* QR Code Generation
+:PROPERTIES:
+:header-args:mcp: :server qrcode
+:END:
+
+Let's start by exploring the QR code generation capabilities.
+
+** Basic QR Code Generation
+
+Generate a simple QR code with a URL:
+
+#+begin_src mcp
+tools/call generate-qrcode --content="https://github.com/jwalsh/mcp-server-qrcode"
+#+end_src
+
+#+RESULTS:
+: QR code generated:
+: █████████████████████████████████████████████
+: █████████████████████████████████████████████
+: ████ ▄▄▄▄▄ █▀█ █▄██▄▀▄█ ▀ ██ ▀██ ▄▄▄▄▄ ████
+: ████ █   █ █▀▀▀█ ▀▄▄██▀ ▄█▄█▀▄██ █   █ ████
+: ████ █▄▄▄█ █▀ █▀▀█▄ ▀▄▀▄▀▄▀▀▄▀█▀ █▄▄▄█ ████
+: ████▄▄▄▄▄▄▄█▄▀ ▀▄█▄█ █▄█ █ █ █▄█▄▄▄▄▄▄▄████
+: ████ ▄▄▄▀▄▄▀ ▄▀▄  ▄ ▄  ▄▄▀▄██  ▀█▄▀ ▀▄█████
+: ████▀█ █▄▄▀ ▄██▄▀▄▀█▄█▀█ ▄ █ ▄▀▄█▀▄█▀█▀████
+: ████▀▄  ▄▄█ ▄▄▄██▄▀ ▄▄▄ ▀ ▄▄▀▀▀▄▄▄▀█▀█▀████
+: ████▄█▄█▄▄▄▄▀▄▀█▀██▄█▄▀█▄ ▀▄ ▀▄▀▄▀  █ █████
+: ████ ▄▄▄▄▄ █▄▀▀▀▄ ▄▄ ▄ ███▀▄ ▄█▄█▄▀ ▀ █████
+: ████ █   █ █ ▀█▀ ▀█▄▀▄ ▀ ▄█▀██▄ ▄█ ▀▀▄▀████
+: ████ █▄▄▄█ █▀▀█▄▄█ ▄▄ ▄ ▀ ▄███ █ ▄ ▀▀█▀████
+: ████▄▄▄▄▄▄▄█▄███▄█▄▄█▄▄███▄█▄█▄▄▄▄▄▄▄██████
+: █████████████████████████████████████████████
+: █████████████████████████████████████████████
+
+** Customizing QR Codes
+
+*** With Error Correction
+
+Generate a QR code with high error correction:
+
+#+begin_src mcp
+tools/call generate-qrcode --content="https://github.com" --errorCorrectionLevel=H
+#+end_src
+
+#+RESULTS:
+: QR code generated with high error correction:
+: ██████████████████████████
+: ██████████████████████████
+: ████ ▄▄▄▄▄ █▄█ ▄▄▄▄▄ ████
+: ████ █   █ █ █ █   █ ████
+: ████ █▄▄▄█ █▀█ █▄▄▄█ ████
+: ████▄▄▄▄▄▄▄█▄█▄▄▄▄▄▄▄████
+: ████▄▄ ▀▄▄▀█▀▄█▄▄▀█▄▀████
+: ████▀██▀▄▄▄█▄ ▄▄▀▄▀██████
+: ████ ▄▀█▄▄ ▄▄▄ ▄▄▀▀▄▀████
+: ████▄█▄▄▀▄▄ █▄█ █▄█▄▀████
+: ████ ▄▄▄▄▄ █▄█▄▀ ▄█▄▀████
+: ████ █   █ █  █▀▄▄▀ █████
+: ████ █▄▄▄█ █▀█▄█▄█ ▀█████
+: ████▄▄▄▄▄▄▄█▄█▄█▄▄█▄█████
+: ██████████████████████████
+: ██████████████████████████
+
+*** With Custom Size
+
+Generate a larger QR code:
+
+#+begin_src mcp
+tools/call generate-qrcode --content="Testing larger QR code" --size=8
+#+end_src
+
+#+RESULTS:
+: QR code generated (size: 8):
+: ████████████████████████████
+: ████████████████████████████
+: ████ ▄▄▄▄▄ █▀▄▄█▀█ ▄▄▄▄▄ ████
+: ████ █   █ █▄▀ █▄█ █   █ ████
+: ████ █▄▄▄█ █▀█ ▄▄█ █▄▄▄█ ████
+: ████▄▄▄▄▄▄▄█▄█ █▄█▄▄▄▄▄▄▄████
+: ████▄█ ▀▄▄▀█▄▀█▄███▀ ▄█▄▀████
+: ████▄▄▄█ ▀▀▄▄▄▀▄▄▄▄▀▄ ▄▀█████
+: ████▀ ▄▄▄ █▄▄  ▀█▄▀ ▄██▀▀████
+: ████▄▄▀ ▄▄▀ ▄█▀█▄▀█▄▄▄█▄█████
+: ████ ▄ ▄▄▄ ▄█ █ ▄█▄  ▄██▀████
+: ████▄▄█▄▄▄█▄▄ ██▄▄▀█▄▀▀██████
+: ████ ▄▄▄▄▄ █▄▄ ▄█▄██▄ ▄▄▀████
+: ████ █   █ █▄▀█▄█ ▄██▀▄▀▀████
+: ████ █▄▄▄█ █▀▀▄█▄███▄▄▄▀█████
+: ████▄▄▄▄▄▄▄█▄███▄▄▄█▄█▄██████
+: ████████████████████████████████
+: ████████████████████████████████
+
+*** Saving to File
+
+Generate a QR code and save it to a file:
+
+#+begin_src mcp :file ./qrcode-example.png
+tools/call generate-qrcode --content="Save to file example" --output=qrcode-example.png
+#+end_src
+
+#+RESULTS:
+[[file:./qrcode-example.png]]
+
+** Special Content Types
+
+*** Wi-Fi Configuration
+
+Generate a QR code for Wi-Fi configuration:
+
+#+begin_src mcp
+tools/call generate-qrcode --content="WIFI:S:MyNetwork;T:WPA;P:password123;;"
+#+end_src
+
+#+RESULTS:
+: QR code for Wi-Fi configuration:
+: ██████████████████████████████████
+: ██████████████████████████████████
+: ████ ▄▄▄▄▄ █▄▄▄▀▄▄█▀█ ▄▄▄▄▄ ████
+: ████ █   █ █▄▀█▄▄▄▀█ █   █ ████
+: ████ █▄▄▄█ █ ▄ █▀ ▄█ █▄▄▄█ ████
+: ████▄▄▄▄▄▄▄█ █ ▀ █▄█▄▄▄▄▄▄▄████
+: ████▄▄█▀▄▀█▄ ▀█▄▄▀█▄▀▄▀▄▄▀▄████
+: ████▀▄█▄▀ ▄▄▀▄█ █▄ ▄█ ▄█  █████
+: ██████▄  ▄▄▀█▄█▄  ▄ █▄ ▄██▀████
+: ████▀ █ ▀▄█▄█▀▄▄ ▄█ ▄▄▄▄▀▄▀████
+: ████▄█▄▄▄█▄ ▄█ ▄█▀▄ ▄ ▄▀▀█▄████
+: ████ ▄▄▄ ▄ ▀ ▄▄██▄▄█ ▄▄█▄▄▀████
+: ████▄▄█ ▄▀▄  ▄▄▀█▄██▄▄ ▄█ ▀████
+: ████ ▄▄▀▄▄▄█▄▀█▄▄█▀▄▄▀█▄▄▄▀████
+: ████▀▀█▀▄▄▄  ▄█▀▄▄ ▀▄▄ ▄ ▄▄████
+: ████ █▄  ▀▄██▄▄█▀▄█▀▄█▄██▄█████
+: ████▄██▄▄▄▄▄▀▄▀██▄█▄█▄█▄█▀▀████
+: ████ ▄▄▄▄▄ █▄█▄▀▄▀▄ ▄ ▄▄█▄▀████
+: ████ █   █ █▀█▄▄▄█▄▀ ▄█▄▀▄█████
+: ████ █▄▄▄█ █▄▀ ▄▀█ ▄ ▄█ ▀▀▀████
+: ████▄▄▄▄▄▄▄█▄▄███▄█▄███▄██▄████
+: ██████████████████████████████████
+: ██████████████████████████████████
+
+*** Contact Information (vCard)
+
+Generate a QR code for a contact card:
+
+#+begin_src mcp
+tools/call generate-qrcode --content="BEGIN:VCARD
+VERSION:3.0
+N:Walsh;Jason;;;
+ORG:Example Organization
+TITLE:MCP Developer
+TEL:+1-555-123-4567
+EMAIL:example@example.com
+URL:https://github.com/jwalsh
+END:VCARD"
+#+end_src
+
+#+RESULTS:
+: QR code for vCard generated with contact information.
+
+* File System Operations
+:PROPERTIES:
+:header-args:mcp: :server filesystem
+:END:
+
+The filesystem MCP server allows you to interact with your file system.
+
+** Listing Files
+
+List files in your projects directory:
+
+#+begin_src mcp
+tools/call list-files --path="$HOME/projects" --maxDepth=1
+#+end_src
+
+#+RESULTS:
+: Files in /Users/jwalsh/projects:
+: - mcp-server-qrcode
+: - other-project-1
+: - other-project-2
+: ...
+
+** Reading a File
+
+Read the contents of a file:
+
+#+begin_src mcp
+tools/call read-file --path="$HOME/projects/mcp-server-qrcode/README.md"
+#+end_src
+
+#+RESULTS:
+: # MCP Server QRCode
+: 
+: Generate QR codes seamlessly across multiple interfaces using the Model Context Protocol (MCP).
+: 
+: ## Installation
+: 
+: ```
+: npm install -g @jwalsh/mcp-server-qrcode
+: ```
+: ...
+
+* Git Operations
+:PROPERTIES:
+:header-args:mcp: :server git
+:END:
+
+The git MCP server allows you to interact with git repositories.
+
+** Repository Status
+
+Check the status of a git repository:
+
+#+begin_src mcp
+tools/call status --repo="$HOME/projects/mcp-server-qrcode"
+#+end_src
+
+#+RESULTS:
+: Git Status:
+: On branch main
+: Your branch is up to date with 'origin/main'.
+: 
+: Changes not staged for commit:
+:   (use "git add <file>..." to update what will be committed)
+:   (use "git restore <file>..." to discard changes in working directory)
+: 	modified:   src/qrcode.ts
+: 
+: Untracked files:
+:   (use "git add <file>..." to include in what will be committed)
+: 	scripts/mcp-inspector-test.sh
+: 
+: no changes added to commit (use "git add" and/or "git commit -a")
+
+** Commit History
+
+View recent commit history:
+
+#+begin_src mcp
+tools/call log --repo="$HOME/projects/mcp-server-qrcode" --maxCount=3
+#+end_src
+
+#+RESULTS:
+: Recent commits:
+: commit abc123def456
+: Author: Jason Walsh <example@example.com>
+: Date:   Fri Feb 28 09:30:45 2025
+: 
+:     Add error correction level option
+: 
+: commit def789abc012
+: Author: Jason Walsh <example@example.com>
+: Date:   Thu Feb 27 15:22:33 2025
+: 
+:     Initial implementation
+: 
+: commit 567890abcdef
+: Author: Jason Walsh <example@example.com>
+: Date:   Wed Feb 26 11:17:22 2025
+: 
+:     Project setup
+
+* GitHub Integration
+:PROPERTIES:
+:header-args:mcp: :server github
+:END:
+
+The GitHub MCP server allows you to interact with GitHub repositories.
+
+** List Issues
+
+List recent issues from a repository:
+
+#+begin_src mcp
+tools/call list-issues --owner="modelcontextprotocol" --repo="inspector" --state="open" --maxCount=3
+#+end_src
+
+#+RESULTS:
+: Open Issues:
+: #45: "Add support for custom QR code styles" (opened by user123)
+: #42: "File output functionality broken in latest release" (opened by contributor789)
+: #39: "Documentation improvements needed" (opened by maintainer456)
+
+** Repository Information
+
+Get information about a repository:
+
+#+begin_src mcp
+tools/call repo-info --owner="modelcontextprotocol" --repo="inspector"
+#+end_src
+
+#+RESULTS:
+: Repository: modelcontextprotocol/inspector
+: Description: Inspector tool for Model Context Protocol
+: Stars: 421
+: Forks: 71
+: Open Issues: 13
+: License: MIT
+: Created: 2023-11-15
+: Last Updated: 2025-02-25
+
+* Puppeteer Web Automation
+:PROPERTIES:
+:header-args:mcp: :server puppeteer
+:END:
+
+The Puppeteer MCP server allows you to automate web browsers.
+
+** Take Screenshot
+
+Take a screenshot of a website:
+
+#+begin_src mcp :file ./github-screenshot.png
+tools/call screenshot --url="https://github.com/modelcontextprotocol/inspector" --fullPage=false
+#+end_src
+
+#+RESULTS:
+[[file:./github-screenshot.png]]
+
+** Extract Content
+
+Extract content from a web page:
+
+#+begin_src mcp
+tools/call extract-text --url="https://github.com/modelcontextprotocol/inspector" --selector=".markdown-body"
+#+end_src
+
+#+RESULTS:
+: # Model Context Protocol Inspector
+: 
+: The MCP Inspector is a tool for inspecting and debugging MCP servers. It provides a graphical interface for interacting with MCP servers, viewing responses, and testing tools.
+: 
+: ## Installation
+: 
+: ```
+: npm install -g @modelcontextprotocol/inspector
+: ```
+: 
+: ## Usage
+: 
+: To start the inspector, run:
+: 
+: ```
+: mcp-inspector [command] [args...]
+: ```
+: ...
+
+* Web Fetch Operations
+:PROPERTIES:
+:header-args:mcp: :server fetch
+:END:
+
+The fetch MCP server allows you to make HTTP requests to web services.
+
+** Basic GET Request
+
+Perform a simple GET request:
+
+#+begin_src mcp
+tools/call fetch --url="https://api.github.com/repos/modelcontextprotocol/inspector"
+#+end_src
+
+#+RESULTS:
+#+begin_src json
+{
+  "id": 123456789,
+  "node_id": "R_kgDOHJKLMN",
+  "name": "inspector",
+  "full_name": "modelcontextprotocol/inspector",
+  "private": false,
+  "owner": {
+    "login": "modelcontextprotocol",
+    "id": 98765432,
+    "type": "Organization"
+  },
+  "html_url": "https://github.com/modelcontextprotocol/inspector",
+  "description": "Inspector tool for Model Context Protocol",
+  "fork": false,
+  "created_at": "2023-11-15T12:34:56Z",
+  "updated_at": "2025-02-25T10:11:12Z",
+  "pushed_at": "2025-02-27T15:16:17Z",
+  "stargazers_count": 421,
+  "watchers_count": 421,
+  "language": "TypeScript",
+  "forks_count": 71,
+  "open_issues_count": 13,
+  "license": {
+    "key": "mit",
+    "name": "MIT License",
+    "url": "https://api.github.com/licenses/mit"
+  }
+}
+#+end_src
+
+** POST Request with JSON Payload
+
+Send data to an API endpoint:
+
+#+begin_src mcp
+tools/call fetch --url="https://httpbin.org/post" --method="POST" --headers='{"Content-Type":"application/json"}' --body='{"name":"test","value":123}'
+#+end_src
+
+#+RESULTS:
+#+begin_src json
+{
+  "args": {},
+  "data": "{\"name\":\"test\",\"value\":123}",
+  "files": {},
+  "form": {},
+  "headers": {
+    "Accept": "*/*",
+    "Content-Length": "27",
+    "Content-Type": "application/json",
+    "Host": "httpbin.org",
+    "User-Agent": "mcp-server-fetch/1.0.0"
+  },
+  "json": {
+    "name": "test",
+    "value": 123
+  },
+  "origin": "198.51.100.123",
+  "url": "https://httpbin.org/post"
+}
+#+end_src
+
+* Memory Operations
+:PROPERTIES:
+:header-args:mcp: :server memory
+:END:
+
+The memory MCP server allows storage and retrieval of data across sessions.
+
+** Store Data
+
+Store some data in memory:
+
+#+begin_src mcp
+tools/call store --key="org-mode-demo" --value="This is a test value stored by org-mode"
+#+end_src
+
+#+RESULTS:
+: Stored value for key: org-mode-demo
+
+** Retrieve Data
+
+Retrieve the data we just stored:
+
+#+begin_src mcp
+tools/call retrieve --key="org-mode-demo"
+#+end_src
+
+#+RESULTS:
+: "This is a test value stored by org-mode"
+
+** List All Keys
+
+List all keys in memory:
+
+#+begin_src mcp
+tools/call list-keys
+#+end_src
+
+#+RESULTS:
+: Keys in memory:
+: - org-mode-demo
+: - previous-session-data
+: - user-preferences
+
+** Remove Data
+
+Remove data from memory:
+
+#+begin_src mcp
+tools/call remove --key="org-mode-demo"
+#+end_src
+
+#+RESULTS:
+: Removed key: org-mode-demo
+
+* Sequential Thinking
+:PROPERTIES:
+:header-args:mcp: :server sequential-thinking
+:END:
+
+The sequential thinking MCP server helps break down complex problems into steps.
+
+** Solve a Math Problem
+
+Solve a math problem step by step:
+
+#+begin_src mcp
+tools/call solve --problem="Find the derivative of f(x) = x^3 - 2x^2 + 4x - 7"
+#+end_src
+
+#+RESULTS:
+: Step 1: Identify the function f(x) = x^3 - 2x^2 + 4x - 7
+: Step 2: Apply the power rule for each term:
+:   - For x^3: The derivative is 3x^2
+:   - For -2x^2: The derivative is -4x
+:   - For 4x: The derivative is 4
+:   - For -7: The derivative is 0 (constant term)
+: Step 3: Combine all terms:
+:   f'(x) = 3x^2 - 4x + 4
+: 
+: Final answer: f'(x) = 3x^2 - 4x + 4
+
+** Analyze a Problem
+
+Break down a complex problem:
+
+#+begin_src mcp
+tools/call analyze --problem="How might we reduce plastic waste in oceans?"
+#+end_src
+
+#+RESULTS:
+: Problem Analysis: Reducing plastic waste in oceans
+: 
+: Step 1: Identify sources of plastic waste
+:   - Consumer packaging
+:   - Fishing gear
+:   - Microplastics from products
+:   - Industrial waste
+:   - Improper waste disposal
+: 
+: Step 2: Consider intervention points
+:   - Reduce production (upstream)
+:   - Improve waste management (midstream)
+:   - Clean up existing pollution (downstream)
+: 
+: Step 3: Potential solutions
+:   - Policy: Bans on single-use plastics
+:   - Technology: Biodegradable alternatives
+:   - Infrastructure: Improved recycling systems
+:   - Education: Consumer awareness campaigns
+:   - Innovation: New materials research
+: 
+: Step 4: Implementation challenges
+:   - Economic costs
+:   - Behavioral change
+:   - Industry resistance
+:   - International coordination
+: 
+: This analysis provides a framework for developing comprehensive strategies to address ocean plastic pollution.
+
+* iTerm Integration
+:PROPERTIES:
+:header-args:mcp: :server iterm
+:END:
+
+The iTerm MCP server allows interaction with your terminal.
+
+** Run Shell Command
+
+Run a shell command and get the output:
+
+#+begin_src mcp
+tools/call exec --command="ls -la" --cwd="$HOME/projects/mcp-server-qrcode"
+#+end_src
+
+#+RESULTS:
+: total 568
+: drwxr-xr-x  19 jwalsh  staff    608 Feb 28 10:23 .
+: drwxr-xr-x  27 jwalsh  staff    864 Feb 27 15:42 ..
+: -rw-r--r--   1 jwalsh  staff    374 Feb 26 09:12 .editorconfig
+: -rw-r--r--   1 jwalsh  staff    125 Feb 26 09:12 .eslintignore
+: -rw-r--r--   1 jwalsh  staff   2530 Feb 26 09:12 .eslintrc.js
+: drwxr-xr-x  12 jwalsh  staff    384 Feb 28 09:15 .git
+: -rw-r--r--   1 jwalsh  staff     11 Feb 26 09:12 .gitignore
+: -rw-r--r--   1 jwalsh  staff    283 Feb 26 09:12 .prettierrc
+: -rw-r--r--   1 jwalsh  staff   1073 Feb 28 09:45 LICENSE
+: -rw-r--r--   1 jwalsh  staff   3283 Feb 28 10:15 Makefile
+: -rw-r--r--   1 jwalsh  staff   2568 Feb 28 09:30 README.md
+: drwxr-xr-x   7 jwalsh  staff    224 Feb 28 09:18 build
+: drwxr-xr-x   3 jwalsh  staff     96 Feb 28 10:23 logs
+: -rw-r--r--   1 jwalsh  staff  78541 Feb 28 09:15 package-lock.json
+: -rw-r--r--   1 jwalsh  staff   1432 Feb 28 09:15 package.json
+: drwxr-xr-x   4 jwalsh  staff    128 Feb 28 10:23 scripts
+: drwxr-xr-x   6 jwalsh  staff    192 Feb 27 11:42 src
+: drwxr-xr-x   4 jwalsh  staff    128 Feb 27 09:35 test
+: -rw-r--r--   1 jwalsh  staff    198 Feb 26 09:12 tsconfig.json
+
+** Create New Terminal Session
+
+Create a new terminal session and execute a command:
+
+#+begin_src mcp
+tools/call new-session --command="top" --title="System Monitor"
+#+end_src
+
+#+RESULTS:
+: Created new terminal session with ID: session-1234
+: Title: System Monitor
+: Running command: top
+
+* Combining Multiple MCP Servers
+
+We can combine multiple MCP servers to create more complex workflows:
+
+** QR Code for GitHub Repository
+
+Generate a QR code for a GitHub repository URL:
+
+#+begin_src mcp :server github
+tools/call repo-info --owner="modelcontextprotocol" --repo="inspector"
+#+end_src
+
+#+RESULTS:
+: Repository: modelcontextprotocol/inspector
+: Description: Inspector tool for Model Context Protocol
+: Stars: 421
+: Forks: 71
+: Open Issues: 13
+: License: MIT
+: Created: 2023-11-15
+: Last Updated: 2025-02-25
+
+Now generate a QR code for the repository URL:
+
+#+begin_src mcp :server qrcode :file github-repo-qr.png
+tools/call generate-qrcode --content="https://github.com/modelcontextprotocol/inspector" --size=8
+#+end_src
+
+#+RESULTS:
+[[file:github-repo-qr.png]]
+
+** Analyze Repository Structure and Generate QR Code
+
+First, list the files in a repository:
+
+#+begin_src mcp :server filesystem
+tools/call list-files --path="$HOME/projects/mcp-server-qrcode/src" --maxDepth=2
+#+end_src
+
+#+RESULTS:
+: Files in /Users/jwalsh/projects/mcp-server-qrcode/src:
+: - cli.ts
+: - index.ts
+: - qrcode.ts
+: - tools/
+:   - generate.ts
+:   - index.ts
+
+Now, generate a QR code with the repository structure:
+
+#+begin_src mcp :server qrcode
+tools/call generate-qrcode --content="MCP QR Code Server Structure:
+- cli.ts
+- index.ts
+- qrcode.ts
+- tools/
+  - generate.ts
+  - index.ts"
+#+end_src
+
+#+RESULTS:
+: QR code generated for repository structure.
+
+* Advanced Usage
+
+** Variable Substitution
+
+Use org-mode variable substitution within MCP code blocks:
+
+#+begin_src emacs-lisp :results silent
+(setq qr-content "https://github.com/jwalsh/mcp-server-qrcode")
+#+end_src
+
+#+begin_src mcp :server qrcode :var content=qr-content
+tools/call generate-qrcode --content="${content}" --size=5
+#+end_src
+
+#+RESULTS:
+: QR code generated for https://github.com/jwalsh/mcp-server-qrcode
+
+** Session Management
+
+We can maintain multiple sessions with different MCP servers:
+
+#+begin_src mcp :server qrcode :session qrcode-session
+tools/list
+#+end_src
+
+#+RESULTS:
+: Available tools:
+: - generate-qrcode
+: - scan-qrcode
+: - help
+: - version
+
+#+begin_src mcp :server filesystem :session fs-session
+tools/list
+#+end_src
+
+#+RESULTS:
+: Available tools:
+: - list-files
+: - read-file
+: - write-file
+: - copy-file
+: - move-file
+: - delete-file
+: - make-directory
+: - list-directories
+
+** Error Handling
+
+Example of handling errors gracefully:
+
+#+begin_src mcp :server qrcode
+tools/call generate-qrcode --invalid-parameter="value"
+#+end_src
+
+#+RESULTS:
+: Error: Unknown parameter 'invalid-parameter'
+: Usage: generate-qrcode --content=<string> [--size=<number>] [--errorCorrectionLevel=<L|M|Q|H>] [--output=<file>]
+
+* Conclusion
+
+This document demonstrates how to use various MCP servers within org-mode using the `ob-mcp` package. The examples cover different MCP servers and show how they can be used together to create complex workflows.
+
+For more information on individual MCP servers, refer to their respective documentation:
+
+- QR Code: https://www.npmjs.com/package/@jwalsh/mcp-server-qrcode
+- Filesystem: https://www.npmjs.com/package/@modelcontextprotocol/server-filesystem
+- Git: https://www.npmjs.com/package/mcp-server-git
+- GitHub: https://www.npmjs.com/package/@modelcontextprotocol/server-github
+- Puppeteer: https://www.npmjs.com/package/@modelcontextprotocol/server-puppeteer
+- Fetch: https://www.npmjs.com/package/mcp-server-fetch
+- Memory: https://www.npmjs.com/package/@modelcontextprotocol/server-memory
+- Sequential Thinking: https://www.npmjs.com/package/@modelcontextprotocol/server-sequential-thinking
+- iTerm: https://www.npmjs.com/package/iterm-mcp

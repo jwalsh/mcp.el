@@ -1,57 +1,74 @@
 {
-	"mcpServers": {
-		"fetch": {
-			"command": "uvx",
-			"args": [
-				"mcp-server-fetch"
-			]
-		},
-		"filesystem": {
-			"args": [
-				"-y",
-				"@modelcontextprotocol/server-filesystem",
-				"$HOME/projects",
-				"$HOME/Documents",
-				"/Users/jasonwalsh/.anthropic/sandbox/jwalsh/mcp.el"
-			],
-			"command": "npx"
-		},
-		"git": {
-			"args": [
-				"mcp-server-git"
-			],
-			"command": "uvx"
-		},
-		"github": {
-			"args": [
-				"-y",
-				"@modelcontextprotocol/server-github"
-			],
-			"command": "npx",
-			"env": {
-				"GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_TOKEN"
-			}
-		},
-		"iterm-mcp": {
-			"command": "npx",
-			"args": [
-				"-y",
-				"iterm-mcp"
-			]
-		},
-		"memory": {
-			"args": [
-				"-y",
-				"@modelcontextprotocol/server-memory"
-			],
-			"command": "npx"
-		},
-		"sequential-thinking": {
-			"args": [
-				"-y",
-				"@modelcontextprotocol/server-sequential-thinking"
-			],
-			"command": "npx"
-		}
-	}
+  "mcpServers": {
+    "fetch": {
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "command": "uvx"
+    },
+    "filesystem": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "$HOME/projects",
+        "$HOME/Documents",
+        "$HOME/.anthropic/sandbox/jwalsh/mcp.el"
+      ],
+      "command": "npx"
+    },
+    "git": {
+      "args": [
+        "mcp-server-git"
+      ],
+      "command": "uvx"
+    },
+    "github": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "command": "npx",
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_TOKEN"
+      }
+    },
+    "iterm": {
+      "args": [
+        "-y",
+        "iterm-mcp"
+      ],
+      "command": "npx"
+    },
+    "memory": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "command": "npx"
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "qrcode": {
+      "args": [
+        "-y",
+        "@jwalsh/mcp-server-qrcode"
+      ],
+      "command": "npx"
+    },
+    "qrcode-dev": {
+      "args": [
+        "$HOME/projects/mcp-server-qrcode/build/cli.js"
+      ],
+      "command": "node"
+    },
+    "sequential-thinking": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "command": "npx"
+    }
+  }
 }
