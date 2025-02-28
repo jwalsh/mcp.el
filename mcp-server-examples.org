@@ -1,94 +1,307 @@
-#+TITLE: Model Context Protocol (MCP) Examples in Org Mode
+#+TITLE: MCP Server Examples in Org Mode
 #+AUTHOR: Jason Walsh
 #+OPTIONS: toc:2 num:t
-#+PROPERTY: header-args:mcp :session *mcp-session* :exports both
 
 * Introduction
 
-This document demonstrates how to use various MCP servers within org-mode using the ~ob-mcp~ package. The examples cover different MCP servers configured in your environment.
+This document demonstrates how to use various MCP servers through Org Mode. We'll load the configuration from the template file and test each server's basic functionality.
 
-First, let's load the MCP configuration:
+First, let's load the configuration template:
 
 #+begin_src emacs-lisp :results silent
 (require 'ob-mcp)
+(require 'json)
 
-;; Load the MCP server configuration
-(ob-mcp-load-config-from-string 
- '{
-  "mcpServers": {
-    "fetch": {
-      "args": [
-        "mcp-server-fetch"
-      ],
-      "command": "uvx"
-    },
-    "filesystem": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "$HOME/projects",
-        "$HOME/Documents",
-        "$HOME/.anthropic/sandbox/jwalsh/mcp.el"
-      ],
-      "command": "npx"
-    },
-    "git": {
-      "args": [
-        "mcp-server-git"
-      ],
-      "command": "uvx"
-    },
-    "github": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
-      "command": "npx",
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_TOKEN"
-      }
-    },
-    "iterm": {
-      "args": [
-        "-y",
-        "iterm-mcp"
-      ],
-      "command": "npx"
-    },
-    "memory": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ],
-      "command": "npx"
-    },
-    "puppeteer": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
-    },
-    "qrcode": {
-      "args": [
-        "-y",
-        "@jwalsh/mcp-server-qrcode"
-      ],
-      "command": "npx"
-    },
-    "qrcode-dev": {
-      "args": [
-        "$HOME/projects/mcp-server-qrcode/build/cli.js"
-      ],
-      "command": "node"
-    },
-    "sequential-thinking": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
-      "command": "npx"
-    }
-  }
-}')
+;; Load the template file
+(defvar mcp-config-template nil)
+(with-temp-buffer
+  (insert-file-contents "claude_desktop_config.template.json")
+  (setq mcp-config-template (buffer-string)))
+
+;; Simple replacement of $HOME with actual path (not doing full variable expansion)
+(setq mcp-config-template 
+      (replace-regexp-in-string "\\$HOME" (expand-file-name "~") mcp-config-template))
+
+;; Parse the config
+(let ((json-object-type 'hash-table)
+      (json-array-type 'list)
+      (json-key-type 'string))
+  (setq ob-mcp-server-config (json-read-from-string mcp-config-template)))
+
+;; Function to test if a server is configured and available
+(defun test-mcp-server (server-name)
+  (let* ((servers (gethash "mcpServers" ob-mcp-server-config))
+         (server-config (when servers (gethash server-name servers))))
+    (if server-config
+        (format "Server '%s' is configured:\nCommand: %s\nArgs: %s" 
+                server-name 
+                (gethash "command" server-config)
+                (mapconcat 'identity (gethash "args" server-config) " "))
+      (format "Server '%s' is not configured" server-name))))
 #+end_src
+
+* DONE Checking Available MCP Servers
+
+Let's check which MCP servers are configured in our template:
+
+#+begin_src emacs-lisp
+(let ((servers (gethash "mcpServers" ob-mcp-server-config))
+      (server-list '()))
+  (maphash (lambda (k _v) (push k server-list)) servers)
+  (sort server-list 'string<))
+#+end_src
+
+#+RESULTS:
+| fetch | filesystem | git | github | iterm | memory | puppeteer | qrcode | qrcode-dev | sequential-thinking |
+
+* DONE Testing Individual Servers
+
+Let's check the configuration for each server type:
+
+** QR Code Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "qrcode")
+#+end_src
+
+#+RESULTS:
+: Server 'qrcode' is configured:
+: Command: npx
+: Args: -y @jwalsh/mcp-server-qrcode
+
+** QR Code Development Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "qrcode-dev")
+#+end_src
+
+#+RESULTS:
+: Server 'qrcode-dev' is configured:
+: Command: node
+: Args: /USERS/JASONWALSH/projects/mcp-server-qrcode/build/cli.js
+
+** Filesystem Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "filesystem")
+#+end_src
+
+#+RESULTS:
+: Server 'filesystem' is configured:
+: Command: npx
+: Args: -y @modelcontextprotocol/server-filesystem /USERS/JASONWALSH/projects /USERS/JASONWALSH/Documents /USERS/JASONWALSH/.anthropic/sandbox/jwalsh/mcp.el
+
+** Git Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "git")
+#+end_src
+
+#+RESULTS:
+: Server 'git' is configured:
+: Command: uvx
+: Args: mcp-server-git
+
+** GitHub Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "github")
+#+end_src
+
+#+RESULTS:
+: Server 'github' is configured:
+: Command: npx
+: Args: -y @modelcontextprotocol/server-github
+
+** ITerm Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "iterm")
+#+end_src
+
+#+RESULTS:
+: Server 'iterm' is configured:
+: Command: npx
+: Args: -y iterm-mcp
+
+** Memory Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "memory")
+#+end_src
+
+#+RESULTS:
+: Server 'memory' is configured:
+: Command: npx
+: Args: -y @modelcontextprotocol/server-memory
+
+** Puppeteer Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "puppeteer")
+#+end_src
+
+#+RESULTS:
+: Server 'puppeteer' is configured:
+: Command: npx
+: Args: -y @modelcontextprotocol/server-puppeteer
+
+** Sequential Thinking Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "sequential-thinking")
+#+end_src
+
+#+RESULTS:
+: Server 'sequential-thinking' is configured:
+: Command: npx
+: Args: -y @modelcontextprotocol/server-sequential-thinking
+
+** Fetch Server
+
+#+begin_src emacs-lisp
+(test-mcp-server "fetch")
+#+end_src
+
+#+RESULTS:
+: Server 'fetch' is configured:
+: Command: uvx
+: Args: mcp-server-fetch
+
+* DONE Simple Testing Commands
+
+Here are some simple commands to test each server once it's properly configured.
+You can uncomment these blocks to run them when you have the servers set up.
+
+** QR Code Generation Test
+
+Basic QR code generation command:
+
+#+begin_src sh :results verbatim
+# Command format for reference - not executed
+echo "Command would be:"
+echo "npx -y @jwalsh/mcp-server-qrcode"
+echo "tools/call generate-qrcode --content=\"https://github.com/jwalsh/mcp-server-qrcode\""
+#+end_src
+
+#+begin_src mcp :server qrcode :eval never
+tools/call generate-qrcode --content="https://github.com/jwalsh/mcp-server-qrcode"
+#+end_src
+
+** Filesystem Test
+
+Basic filesystem list command:
+
+#+begin_src sh :results verbatim
+# Command format for reference - not executed
+echo "Command would be:"
+echo "npx -y @modelcontextprotocol/server-filesystem $HOME/projects $HOME/Documents $HOME/.anthropic/sandbox/jwalsh/mcp.el"
+echo "tools/call list-files --path=\"$HOME\" --maxDepth=1"
+#+end_src
+
+#+RESULTS:
+: Command would be:
+: npx -y @modelcontextprotocol/server-filesystem /Users/jasonwalsh/projects /Users/jasonwalsh/Documents /Users/jasonwalsh/.anthropic/sandbox/jwalsh/mcp.el
+: tools/call list-files --path="/Users/jasonwalsh" --maxDepth=1
+
+#+begin_src mcp :server filesystem :eval never
+tools/call list-files --path="$HOME" --maxDepth=1
+#+end_src
+
+** Git Test 
+
+Basic git status command:
+
+#+begin_src sh :results verbatim
+# Command format for reference - not executed
+echo "Command would be:"
+echo "uvx mcp-server-git"
+echo "tools/call status --repo=\"$HOME/.anthropic/sandbox/jwalsh/mcp.el\""
+#+end_src
+
+#+RESULTS:
+: Command would be:
+: uvx mcp-server-git
+: tools/call status --repo="/Users/jasonwalsh/.anthropic/sandbox/jwalsh/mcp.el"
+
+#+begin_src mcp :server git :eval never
+tools/call status --repo="$HOME/.anthropic/sandbox/jwalsh/mcp.el"
+#+end_src
+
+** Memory Test
+
+Basic memory store command:
+
+#+begin_src sh :results verbatim
+# Command format for reference - not executed
+echo "Command would be:"
+echo "npx -y @modelcontextprotocol/server-memory"
+echo "tools/call store --key=\"test-key\" --value=\"test-value\""
+#+end_src
+
+#+RESULTS:
+: Command would be:
+: npx -y @modelcontextprotocol/server-memory
+: tools/call store --key="test-key" --value="test-value"
+
+#+begin_src mcp :server memory :eval never
+tools/call store --key="test-key" --value="test-value"
+#+end_src
+
+* DONE Creating Shell Scripts to Test Servers
+
+You can use this information to create shell scripts that directly test the MCP servers:
+
+#+begin_src emacs-lisp :results output :exports both
+(let ((servers (gethash "mcpServers" ob-mcp-server-config))
+      (test-scripts ""))
+  (maphash (lambda (server-name server-config)
+             (let ((command (gethash "command" server-config))
+                   (args (gethash "args" server-config))
+                   (test-command "tools/list"))
+               (setq test-scripts 
+                     (concat test-scripts 
+                             (format "# Test %s server\n%s %s\n\n" 
+                                     server-name
+                                     command
+                                     (mapconcat 'identity args " "))))))
+          servers)
+  (princ test-scripts))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# Test fetch server
+uvx mcp-server-fetch
+
+# Test filesystem server
+npx -y @modelcontextprotocol/server-filesystem /USERS/JASONWALSH/projects /USERS/JASONWALSH/Documents /USERS/JASONWALSH/.anthropic/sandbox/jwalsh/mcp.el
+
+# Test git server
+uvx mcp-server-git
+
+# Test github server
+npx -y @modelcontextprotocol/server-github
+
+# Test iterm server
+npx -y iterm-mcp
+
+# Test memory server
+npx -y @modelcontextprotocol/server-memory
+
+# Test puppeteer server
+npx -y @modelcontextprotocol/server-puppeteer
+
+# Test qrcode server
+npx -y @jwalsh/mcp-server-qrcode
+
+# Test qrcode-dev server
+node /USERS/JASONWALSH/projects/mcp-server-qrcode/build/cli.js
+
+# Test sequential-thinking server
+npx -y @modelcontextprotocol/server-sequential-thinking
+
+#+end_example
 
 * QR Code Generation
 :PROPERTIES:
