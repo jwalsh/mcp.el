@@ -28,7 +28,4 @@ auto-save-list/
 /dist/
 /generated/
 
-# Tangled files from org-mode
-*.mmd
-*.sh
-*.el
+
