@@ -1,9 +1,9 @@
 #+TITLE: MCP.el - Model Context Protocol for Emacs
 #+AUTHOR: Jason Walsh
 #+DATE: 2025-02-03
-#+PROPERTY: header-args:emacs-lisp :tangle yes :mkdirp t
-#+PROPERTY: header-args:bash :tangle yes :mkdirp t
-#+PROPERTY: header-args:mermaid :tangle yes :mkdirp t
+#+PROPERTY: header-args:emacs-lisp :tangle generated/%.el :mkdirp t
+#+PROPERTY: header-args:bash :tangle generated/%.sh :mkdirp t
+#+PROPERTY: header-args:mermaid :tangle generated/%.mmd :mkdirp t
 
 [[https://www.gnu.org/licenses/gpl-3.0][https://img.shields.io/badge/License-GPLv3-blue.svg]]
 
@@ -78,7 +78,7 @@ Basic usage example:
 ;; Initialize a filesystem MCP server connection
 (mcp-connect-server "filesystem" 
                     "npx" 
-                    '("-y" "@modelcontextprotocol/server-filesystem" "~/Documents/")
+                    '("-y" "@modelcontextprotocol/server-filesystem" "~/Documents")
                     :initial-callback
                     (lambda (connection)
                       (message "Connected to %s" (jsonrpc-name connection)))

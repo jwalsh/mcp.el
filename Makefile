@@ -62,6 +62,8 @@ clean:
 ## init            Create necessary directories
 init:
 	mkdir -p $(BUILD_DIR) $(DIST_DIR) $(TEST_DIR)
+	npm install -g @modelcontextprotocol/server-filesystem @modelcontextprotocol/server-github @modelcontextprotocol/server-time @modelcontextprotocol/server-memory @modelcontextprotocol/server-fetch @modelcontextprotocol/server-sqlite
+	pip install mcp-server-git uvx
 
 ## tangle          Tangle all org files
 tangle: init
@@ -133,3 +135,63 @@ test-init:
 	echo '(require '\''ert)\n(require '\''mcp)\n\n(ert-deftest test-mcp-version () \n  "Test MCP version."\n  (should (string= *MCP-VERSION* "2024-11-05")))' > $(TEST_DIR)/test-mcp.el
 
 .PHONY: help versions all clean init tangle compile test build dist deps run dev lint docs package test-init
+
+## context    Generate file list for prompting, copy to clipboard
+context:
+	poetry run files-to-prompt -c . 
+
+## files-to-prompt    Generate file list for prompting, copy to clipboard
+files-to-prompt:
+	@python3.11 -c "import os, sys; print('\n'.join([f for f in os.listdir('.') if os.path.isfile(f) and not f.startswith('.')]))"
+	@echo "Files in current directory copied to clipboard"
+
+## config-dirs    Create necessary directories
+config-dirs:
+	@mkdir -p dist
+	@mkdir -p "$(HOME)/Library/Application Support/Claude"
+
+## config-template Create configuration template from sample if it doesn't exist
+claude_desktop_config.template.json:
+	@echo "Creating configuration template from sample..."
+	@cp dist/claude_desktop_config.sample.json claude_desktop_config.template.json
+	@echo "Template created at claude_desktop_config.template.json"
+
+## config-generate Generate configuration file from template with expanded variables
+.PHONY: config-generate
+config-generate: dist/claude_desktop_config.json
+
+dist/claude_desktop_config.json: claude_desktop_config.template.json config-dirs
+	@echo "Generating configuration from template..."
+	@if [ -z "$(GITHUB_TOKEN)" ]; then \
+		echo "Warning: GITHUB_TOKEN environment variable is not set"; \
+	fi
+	@echo "Using GITHUB_TOKEN: $(shell echo "$(GITHUB_TOKEN)" | cut -c 1-8)..."
+	@sed -e "s#\$$HOME#$(HOME)#g" \
+		-e "s#\$$GITHUB_TOKEN#$(GITHUB_TOKEN)#g" \
+		claude_desktop_config.template.json > dist/claude_desktop_config.json
+	@echo "Generated configuration is available at dist/claude_desktop_config.json"
+
+## config-validate Validate the generated configuration
+.PHONY: config-validate
+config-validate: dist/claude_desktop_config.json
+	@echo "Validating configuration..."
+	@./validate-config.sh dist/claude_desktop_config.json || echo "⚠️ Some servers could not be validated, but deployment will continue"
+	@echo "Configuration validation completed"
+
+## config-deploy  Deploy configuration to Claude Desktop (with backup)
+.PHONY: config-deploy
+config-deploy: config-validate config-dirs
+	@echo "Deploying configuration to Claude Desktop..."
+	@if [ -f "$(HOME)/Library/Application Support/Claude/claude_desktop_config.json" ]; then \
+		cp "$(HOME)/Library/Application Support/Claude/claude_desktop_config.json" \
+		   "$(HOME)/Library/Application Support/Claude/claude_desktop_config.backup.json"; \
+		echo "Created backup of existing configuration"; \
+	fi
+	@./deploy-mcp-config.sh dist/claude_desktop_config.json
+	@echo "Configuration deployed successfully! Restart Claude Desktop for changes to take effect."
+
+## start-servers  Start MCP servers based on configuration
+.PHONY: start-servers
+start-servers: config-validate
+	@echo "Starting MCP servers..."
+	@./run-servers.sh dist/claude_desktop_config.json

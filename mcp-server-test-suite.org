@@ -1,0 +1,130 @@
+#+TITLE: MCP Server Test Suite
+#+AUTHOR: Jason Walsh
+#+PROPERTY: header-args:python :session *mcp-test-suite* :mkdirp t :tangle mcp_test_suite.py
+#+STARTUP: overview indent
+
+* MCP Server Test Suite
+
+This document serves as a comprehensive configuration and documentation for the MCP Server Test Suite.
+
+** Project Setup
+:PROPERTIES:
+:header-args:sh: :results output :exports both
+:END:
+
+*** Create Project Directory
+#+BEGIN_SRC sh
+mkdir -p ~/projects/mcp-test-suite
+cd ~/projects/mcp-test-suite
+#+END_SRC
+
+** Python Dependencies
+:PROPERTIES:
+:header-args:sh: :results output :exports both
+:END:
+
+Install required Python packages:
+
+#+BEGIN_SRC sh
+python3 -m venv venv
+source venv/bin/activate
+pip install requests pytest logging
+#+END_SRC
+
+** Test Suite Implementation
+:PROPERTIES:
+:header-args:python: :results output :exports both
+:END:
+
+*** Imports and Configurations
+#+BEGIN_SRC python
+import os
+import subprocess
+import json
+import requests
+import logging
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Any
+from enum import Enum, auto
+
+# Configuration and logging setup
+#+END_SRC
+
+*** Test Status Enumeration
+#+BEGIN_SRC python
+class TestStatus(Enum):
+    """Enumeration for test statuses."""
+    PASS = auto()
+    FAIL = auto()
+    PENDING = auto()
+    SKIPPED = auto()
+#+END_SRC
+
+*** Test Result Data Class
+#+BEGIN_SRC python
+@dataclass
+class TestResult:
+    """Data class to track individual test results."""
+    server: str
+    test_name: str
+    status: TestStatus = TestStatus.PENDING
+    notes: str = ""
+    details: Dict[str, Any] = field(default_factory=dict)
+#+END_SRC
+
+*** MCP Test Suite Class
+#+BEGIN_SRC python
+class MCPTestSuite:
+    """Main test suite for MCP servers."""
+    
+    def __init__(self, config_path: Optional[str] = None):
+        """Initialize test suite with optional config."""
+        self.results: List[TestResult] = []
+        self.logger = self._setup_logger()
+        self.config = self._load_config(config_path)
+    
+    # [Rest of the implementation as in the previous Python artifact]
+#+END_SRC
+
+** Test Execution
+:PROPERTIES:
+:header-args:python: :results output :exports both
+:END:
+
+#+BEGIN_SRC python
+def main():
+    """Main entry point for the MCP Test Suite."""
+    test_suite = MCPTestSuite()
+    test_suite.run_all_tests()
+
+if __name__ == '__main__':
+    main()
+#+END_SRC
+
+** Project Documentation
+*** Purpose
+The MCP (Model Context Protocol) Server Test Suite is designed to comprehensively validate the functionality of various servers in the Claude Desktop ecosystem.
+
+*** Servers Tested
+- Filesystem Server
+- Git Server
+- GitHub Server
+- Memory Server
+- Fetch Server
+- iTerm MCP Server
+- Sequential Thinking Server
+
+** Contribution Guidelines
+1. Ensure all tests are reproducible
+2. Add logging for each test
+3. Provide clear error messages
+4. Update documentation with each change
+
+** License
+#+BEGIN_SRC text
+MIT License
+
+Copyright (c) 2024 Jason Walsh
+
+Permission is hereby granted, free of charge...
+#+END_SRC
