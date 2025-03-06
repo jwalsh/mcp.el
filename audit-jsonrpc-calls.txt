@@ -1,0 +1,116 @@
+projects/mcp.el/README.el:                      (message "Connected to %s" (jsonrpc-name connection)))
+projects/mcp.el/Makefile:		--eval "(package-install 'jsonrpc)"
+projects/mcp.el/servers.org:     (message "Connected to %s" (jsonrpc-name connection)))))
+projects/mcp.el/servers.org:     (message "Connected to %s" (jsonrpc-name connection)))))
+projects/mcp.el/servers.org:     (message "Connected to %s" (jsonrpc-name connection)))))
+projects/mcp.el/servers.org:     (message "Connected to %s" (jsonrpc-name connection)))))
+projects/mcp.el/docs/technical-guide.org:                          (message "%s connection" (jsonrpc-name connection)))
+projects/mcp.el/docs/technical-guide.org:                          (message "%s tools: %s" (jsonrpc-name connection) tools))
+projects/mcp.el/docs/technical-guide.org:                          (message "%s prompts: %s" (jsonrpc-name connection) prompts))
+projects/mcp.el/docs/technical-guide.org:                          (message "%s resources: %s" (jsonrpc-name connection) resources)))
+projects/mcp.el/docs/api-reference.md:                    (message "Connected: %s" (jsonrpc-name conn)))
+projects/mcp.el/docs/mermaid-diagrams.mmd:    ReqPkg --> JSONRPC[jsonrpc]
+projects/mcp.el/docs/RFC-001-makefile-standards.md:                --eval "(package-install 'jsonrpc)"
+projects/mcp.el/docs/RFC-001-makefile-standards.md:                --eval "(dolist (pkg '(jsonrpc package-lint)) (package-install pkg))"
+projects/mcp.el/README.org:                      (message "Connected to %s" (jsonrpc-name connection)))
+projects/mcp.el/README.org:    ReqPkg --> JSONRPC[jsonrpc]
+projects/mcp.el/README.org:                --eval "(package-install 'jsonrpc)"
+projects/mcp.el/mcp-test-examples.org:     (message "Connected to filesystem server: %s" (jsonrpc-name connection)))
+projects/mcp.el/mcp-test-examples.org:     (message "Connected to filesystem server: %s" (jsonrpc-name connection)))))
+projects/mcp.el/mcp-test-examples.org:     (message "Connected to git server: %s" (jsonrpc-name connection)))
+projects/mcp.el/mcp-test-examples.org:     (message "Connected to memory server: %s" (jsonrpc-name connection)))
+projects/mcp.el/README.mermaid:    ReqPkg --> JSONRPC[jsonrpc]
+projects/mcp.el/mcp.el:(require 'jsonrpc)
+projects/mcp.el/mcp.el:(defclass mcp-process-connection (jsonrpc-process-connection)
+projects/mcp.el/mcp.el:(cl-defmethod jsonrpc-connection-send ((connection mcp-process-connection)
+projects/mcp.el/mcp.el:                           (t (error "[jsonrpc] invalid method %s" method))))))
+projects/mcp.el/mcp.el:         (converted (jsonrpc-convert-to-endpoint connection args kind))
+projects/mcp.el/mcp.el:         (json (jsonrpc--json-encode converted)))
+projects/mcp.el/mcp.el:     (jsonrpc--process connection)
+projects/mcp.el/mcp.el:    (jsonrpc--event
+projects/mcp.el/mcp.el:    ;; `jsonrpc-connection-receive', called by us, eventually calls
+projects/mcp.el/mcp.el:      (let* ((conn (process-get proc 'jsonrpc-connection))
+projects/mcp.el/mcp.el:             (expected-bytes (jsonrpc--expected-bytes conn)))
+projects/mcp.el/mcp.el:                             (jsonrpc--warn "Invalid JSON: %s %s"
+projects/mcp.el/mcp.el:                            (plist-put message :jsonrpc-json
+projects/mcp.el/mcp.el:                            (process-get proc 'jsonrpc-mqueue)))))
+projects/mcp.el/mcp.el:          ;; to `jsonrpc-connection-receive' below (bug#60088).
+projects/mcp.el/mcp.el:          (setf (jsonrpc--expected-bytes conn) expected-bytes)
+projects/mcp.el/mcp.el:          ;; order.  Very often `jsonrpc-connection-receive' will exit
+projects/mcp.el/mcp.el:           ;; very expensive operation when jsonrpc-mqueue is large,
+projects/mcp.el/mcp.el:           for msg = (pop (process-get proc 'jsonrpc-mqueue)) while msg
+projects/mcp.el/mcp.el:                                        (jsonrpc-connection-receive conn msg)))
+projects/mcp.el/mcp.el:  (apply #'jsonrpc-connection-send
+projects/mcp.el/mcp.el:                   (message "[mcp] Connected! Server `MCP (%s)' now managing." (jsonrpc-name connection))
+projects/mcp.el/mcp.el:                          (jsonrpc-name connection)
+projects/mcp.el/mcp.el:                 (mcp-stop-server (jsonrpc-name connection)))))
+projects/mcp.el/mcp.el:        (jsonrpc-shutdown connection)
+projects/mcp.el/mcp.el:The function uses `jsonrpc-async-request' to send a ping request.
+projects/mcp.el/mcp.el:  (jsonrpc-async-request connection
+projects/mcp.el/mcp.el:                         :error-fn (jsonrpc-lambda (&key code message _data)
+projects/mcp.el/mcp.el:  (jsonrpc-async-request connection
+projects/mcp.el/mcp.el:                         (jsonrpc-lambda (&key code message _data)
+projects/mcp.el/mcp.el:  (jsonrpc-async-request connection
+projects/mcp.el/mcp.el:                         (jsonrpc-lambda (&key code message _data)
+projects/mcp.el/mcp.el:  (jsonrpc-request connection
+projects/mcp.el/mcp.el:  (jsonrpc-async-request connection
+projects/mcp.el/mcp.el:                         (jsonrpc-lambda (&key code message _data)
+projects/mcp.el/mcp.el:  (jsonrpc-async-request connection
+projects/mcp.el/mcp.el:                         (jsonrpc-lambda (&key code message _data)
+projects/mcp.el/mcp.el:  (jsonrpc-request connection
+projects/mcp.el/mcp.el:  (jsonrpc-async-request connection
+projects/mcp.el/mcp.el:                         (jsonrpc-lambda (&key code message _data)
+projects/mcp.el/mcp.el:  (jsonrpc-async-request connection
+projects/mcp.el/mcp.el:                         (jsonrpc-lambda (&key code message _data)
+projects/mcp.el/mcp.el:  (jsonrpc-request connection
+projects/mcp.el/mcp.el:  (jsonrpc-async-request connection
+projects/mcp.el/mcp.el:                         (jsonrpc-lambda (&key code message _data)
+projects/mcp.el/mcp.el:  (jsonrpc-async-request connection
+projects/mcp.el/mcp.el:                         (jsonrpc-lambda (&key code message _data)
+projects/mcp.el/ob-mcp.el:;; Package-Requires: ((emacs "26.1") (org "9.4") (jsonrpc "1.0.0"))
+projects/mcp.el/ob-mcp.el:(require 'jsonrpc)
+projects/mcp.el/ob-mcp.el:           (connection (make-instance 'jsonrpc-process-connection
+projects/mcp.el/ob-mcp.el:      (jsonrpc-shutdown connection)
+projects/mcp.el/ob-mcp.el:      (jsonrpc-shutdown (cdr server))))
+projects/mcp.el/ob-mcp.el:         (response (jsonrpc-request connection
+projects/mcp-server-qrcode/DEVELOPERS.org:   (message "Connected to %s" (jsonrpc-name connection)))
+projects/mcp-server-qrcode/DEVELOPERS.org:echo '{"method":"tools/call","params":{"name":"generate-qrcode","arguments":{"content":"https://github.com/jwalsh/mcp-server-qrcode/releases/tag/v'$VERSION'","format":"text"}},"id":1,"jsonrpc":"2.0"}' | mcp-server-qrcode | jq -r '.result.content[1].text'
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"server/info","params":{}}'
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":2,"method":"resources/list","params":{}}'
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":3,"method":"resources/get","params":{"uri":"qrcode://sample"}}' | jq '.result.contents[1].blob' | head -c 20
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":4,"method":"resources/get","params":{"uri":"qrcode://wifi?ssid=My%20WiFi%20%26%20Network&password=p%40ssw0rd%21&encryption=WPA"}}' > wifi_test.json
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":5,"method":"resources/get","params":{"uri":"qrcode://contact?name=John%20Doe&phone=555-123-4567&email=john%40example.com"}}' | jq '.result.contents[0].text'
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"resources/get","params":{"uri":"qrcode://sample"}}' | grep -q "contents"
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":2,"method":"resources/get","params":{"uri":"qrcode://wifi?ssid=TestNetwork&password=password123&encryption=WPA"}}' | grep -q "contents"
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":3,"method":"resources/get","params":{"uri":"qrcode://contact?name=John%20Doe&phone=555-123-4567&email=john%40example.com"}}' | grep -q "contents"
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":4,"method":"resources/get","params":{"uri":"qrcode://url?url=https://anthropic.com"}}' | grep -q "contents"
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:   curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"resources/list","params":{}}'
+projects/mcp-server-qrcode/docs/2024-03-01-claude-3-7-qrcode-status.md:     curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"resources/get\",\"params\":{\"uri\":\"$uri\"}}" | jq '.result.contents[0].text'
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"server/info","params":{}}'
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":2,"method":"resources/list","params":{}}'
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":3,"method":"resources/get","params":{"uri":"qrcode://sample"}}' | jq '.result.contents[1].blob' | head -c 20
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":4,"method":"resources/get","params":{"uri":"qrcode://wifi?ssid=My%20WiFi%20%26%20Network&password=p%40ssw0rd%21&encryption=WPA"}}' > wifi_test.json
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":5,"method":"resources/get","params":{"uri":"qrcode://contact?name=John%20Doe&phone=555-123-4567&email=john%40example.com"}}' | jq '.result.contents[0].text'
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"resources/get","params":{"uri":"qrcode://sample"}}' | grep -q "contents"
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":2,"method":"resources/get","params":{"uri":"qrcode://wifi?ssid=TestNetwork&password=password123&encryption=WPA"}}' | grep -q "contents"
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":3,"method":"resources/get","params":{"uri":"qrcode://contact?name=John%20Doe&phone=555-123-4567&email=john%40example.com"}}' | grep -q "contents"
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":4,"method":"resources/get","params":{"uri":"qrcode://url?url=https://anthropic.com"}}' | grep -q "contents"
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:   curl -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"resources/list","params":{}}'
+projects/mcp-server-qrcode/docs/2025-03-01-mcp-qrcode-resource-implementation-status.md:     curl -s -X POST http://localhost:3000/json-rpc -H "Content-Type: application/json" -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"resources/get\",\"params\":{\"uri\":\"$uri\"}}" | jq '.result.contents[0].text'
+projects/mcp-server-qrcode/README.org:   (message "Connected to %s" (jsonrpc-name connection)))
+projects/mcp-server-qrcode/README.org:echo '{"method":"tools/list","params":{},"id":1,"jsonrpc":"2.0"}' | mcp-server-qrcode | jq -r '.result.tools[]|.name'
+projects/mcp-server-qrcode/README.org:echo '{"method":"tools/call","params":{"name":"generate-qrcode","arguments":{"content":"https://example.com","format":"text"}},"id":1,"jsonrpc":"2.0"}' | mcp-server-qrcode |  jq -r '.result.content[0].text'
+projects/mcp-server-qrcode/scripts/mcp-inspector-test.sh:  "jsonrpc": "2.0",
+projects/mcp-server-qrcode/scripts/test-mcp-protocol.sh:echo '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test-client","version":"1.0.0"}},"id":0}' | $SERVER_CMD | jq
+projects/mcp-server-qrcode/scripts/test-mcp-protocol.sh:echo '{"jsonrpc":"2.0","method":"initialized","params":{}}' | $SERVER_CMD
+projects/mcp-server-qrcode/scripts/test-mcp-protocol.sh:echo '{"jsonrpc":"2.0","method":"tools/list","params":{},"id":1}' | $SERVER_CMD | jq
+projects/mcp-server-qrcode/scripts/test-mcp-protocol.sh:echo '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"generate-qrcode","arguments":{"content":"test","errorCorrectionLevel":"M","size":3,"format":"text"}},"id":2}' | $SERVER_CMD | jq
+projects/mcp-server-qrcode/scripts/test-mcp-protocol.sh:echo '{"jsonrpc":"2.0","method":"resources/list","params":{},"id":3}' | $SERVER_CMD | jq
+projects/mcp-server-qrcode/scripts/test-mcp-protocol.sh:echo '{"jsonrpc":"2.0","method":"prompts/list","params":{},"id":4}' | $SERVER_CMD | jq
+projects/mcp-server-qrcode/scripts/test-mcp-protocol.sh:echo '{"jsonrpc":"2.0","method":"ping","params":{"data":"test"},"id":5}' | $SERVER_CMD | jq
+projects/mcp-server-qrcode/scripts/test-mcp-protocol.sh:echo '{"jsonrpc":"2.0","method":"shutdown","params":{},"id":6}' | $SERVER_CMD | jq
+projects/mcp-server-qrcode/scripts/test-mcp-protocol.sh:echo '{"jsonrpc":"2.0","method":"exit","params":{}}' | $SERVER_CMD
+projects/mcp-server-qrcode/scripts/test-mcp-servers.sh:  "jsonrpc":"2.0",
+projects/mcp-server-qrcode/scripts/test-mcp-servers.sh:  "jsonrpc": "2.0",
+projects/mcp-server-qrcode/scripts/test-mcp-servers.sh:  "jsonrpc": "2.0",
+projects/mcp-server-qrcode/scripts/test-mcp-servers.sh:  "jsonrpc": "2.0",

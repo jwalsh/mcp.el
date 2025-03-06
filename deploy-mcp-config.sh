@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # deploy-mcp-config.sh - Deploy MCP configuration to Claude Desktop with environment variable expansion
 # Usage: ./deploy-mcp-config.sh [source-config.json]
 

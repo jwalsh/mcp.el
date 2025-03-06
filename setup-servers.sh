@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # setup-servers.sh - Install and configure MCP servers for local development
 set -e
@@ -171,7 +171,7 @@ echo -e "${GREEN}Created run-servers.js script${NC}"
 
 # Create or update run-servers.sh
 cat > run-servers.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 # Start all MCP servers defined in claude_desktop_config.json
 
 CONFIG_FILE="${1:-claude_desktop_config.json}"

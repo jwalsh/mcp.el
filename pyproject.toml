@@ -9,6 +9,8 @@ packages = [{include = "mcp"}]
 [tool.poetry.dependencies]
 mcp-server-git = "^0.1.0"
 uvx = "^0.1.0"
+mcp-server-git = "^0.1.0"
+uvx = "^0.1.0"
 python = "^3.11"
 
 

@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := help
+DEFAULT_GOAL := help
 
 EMACS ?= emacs
 BATCH = $(EMACS) --batch -Q
@@ -62,7 +62,7 @@ clean:
 ## init            Create necessary directories
 init:
 	mkdir -p $(BUILD_DIR) $(DIST_DIR) $(TEST_DIR)
-	npm install -g @modelcontextprotocol/server-filesystem @modelcontextprotocol/server-github @modelcontextprotocol/server-time @modelcontextprotocol/server-memory @modelcontextprotocol/server-fetch @modelcontextprotocol/server-sqlite
+	npm install -g @modelcontextprotocol/server-filesystem @modelcontextprotocol/server-github @modelcontextprotocol/server-time @modelcontextprotocol/server-memory 
 	pip install mcp-server-git uvx
 
 ## tangle          Tangle all org files
@@ -141,9 +141,7 @@ context:
 	poetry run files-to-prompt -c . 
 
 ## files-to-prompt    Generate file list for prompting, copy to clipboard
-files-to-prompt:
-	@python3.11 -c "import os, sys; print('\n'.join([f for f in os.listdir('.') if os.path.isfile(f) and not f.startswith('.')]))"
-	@echo "Files in current directory copied to clipboard"
+files-to-prompt: context
 
 ## config-dirs    Create necessary directories
 config-dirs:
@@ -195,3 +193,19 @@ config-deploy: config-validate config-dirs
 start-servers: config-validate
 	@echo "Starting MCP servers..."
 	@./run-servers.sh dist/claude_desktop_config.json
+
+## mcp-server-test Quick test of MCP server configuration (for developers)
+.PHONY: mcp-server-test
+mcp-server-test: 
+	@echo "QUICK MCP SERVER TEST - Validates servers and offers to deploy configuration"
+	@echo "===================================================================="
+	@./validate-config.sh dist/claude_desktop_config.json
+	@echo "===================================================================="
+	@echo "Test complete. If successful, server setup is working correctly."
+
+.PHONY: audit-jsonrpc
+audit-jsonrpc-calls.txt:
+	@echo "Generating jsonrpc calls audit..."
+	@rg jsonrpc ~/projects/ --glob '!*audit-jsonrpc-calls.txt*' > audit-jsonrpc-calls.txt
+	@echo "Audit complete: $(shell wc -l < audit-jsonrpc-calls.txt) jsonrpc references found"
+	@echo "Results saved to audit-jsonrpc-calls.txt"

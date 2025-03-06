@@ -1,18 +1,11 @@
 {
   "mcpServers": {
-    "fetch": {
-      "args": [
-        "mcp-server-fetch"
-      ],
-      "command": "uvx"
-    },
     "filesystem": {
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "$HOME/projects",
-        "$HOME/Documents",
-        "$HOME/.anthropic/sandbox/jwalsh/mcp.el"
+        "$HOME/Desktop"
       ],
       "command": "npx"
     },
@@ -21,23 +14,6 @@
         "mcp-server-git"
       ],
       "command": "uvx"
-    },
-    "github": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
-      "command": "npx",
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "$GITHUB_TOKEN"
-      }
-    },
-    "iterm": {
-      "args": [
-        "-y",
-        "iterm-mcp"
-      ],
-      "command": "npx"
     },
     "memory": {
       "args": [
@@ -56,12 +32,6 @@
         "@jwalsh/mcp-server-qrcode"
       ],
       "command": "npx"
-    },
-    "qrcode-dev": {
-      "args": [
-        "$HOME/projects/mcp-server-qrcode/build/cli.js"
-      ],
-      "command": "node"
     },
     "sequential-thinking": {
       "args": [
