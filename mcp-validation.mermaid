@@ -1,0 +1,144 @@
+%%{init: {'theme': 'neutral', 'themeVariables': { 'fontSize': '12px'}}}%%
+classDiagram
+  class MCP_Tools {
+    +validate()
+    +report()
+  }
+  
+  MCP_Tools <|-- FilesystemTools
+  MCP_Tools <|-- GitTools
+  MCP_Tools <|-- GitHubTools
+  MCP_Tools <|-- MemoryTools
+  MCP_Tools <|-- iTermTools
+  MCP_Tools <|-- FetchTools
+  MCP_Tools <|-- SequentialThinkingTools
+  
+  class FilesystemTools {
+    +create_directory(directory_path)
+    +directory_tree(directory_path)
+    +edit_file(file_path, edits)
+    +get_file_info(file_path)
+    +list_allowed_directories()
+    +list_directory(directory_path)
+    +move_file(source_path, destination_path)
+    +read_file(file_path)
+    +read_multiple_files(file_paths)
+    +search_files(search_path, pattern)
+    +write_file(file_path, content)
+  }
+  
+  class GitTools {
+    +git_add(path)
+    +git_checkout(branch)
+    +git_commit(message)
+    +git_create_branch(branch_name, base_branch)
+    +git_diff(ref1, ref2)
+    +git_diff_staged()
+    +git_diff_unstaged()
+    +git_log(max_count)
+    +git_reset()
+    +git_show(commit)
+    +git_status()
+  }
+  
+  class GitHubTools {
+    +add_issue_comment(owner, repo, issue_number, body)
+    +create_branch(owner, repo, branch, sha)
+    +create_issue(owner, repo, title, body, labels)
+    +create_or_update_file(owner, repo, path, content, message, branch)
+    +create_pull_request(owner, repo, title, body, head, base)
+    +create_repository(name, description, private)
+    +fork_repository(owner, repo, organization)
+    +get_file_contents(owner, repo, path, ref)
+    +get_issue(owner, repo, issue_number)
+    +list_commits(owner, repo, branch)
+    +list_issues(owner, repo, state, labels)
+    +push_files(owner, repo, files, message, branch)
+    +search_code(query)
+    +search_issues(query)
+    +search_repositories(query)
+    +search_users(query)
+    +update_issue(owner, repo, issue_number, title, body, state, labels)
+  }
+  
+  class MemoryTools {
+    +add_observations(observations)
+    +create_entities(entities)
+    +create_relations(relations)
+    +delete_entities(entity_names)
+    +delete_observations(observations)
+    +delete_relations(relations)
+    +open_nodes(node_names)
+    +read_graph()
+    +search_nodes(query)
+  }
+  
+  class iTermTools {
+    +read_terminal_output()
+    +send_control_character(character)
+    +write_to_terminal(text)
+  }
+  
+  class FetchTools {
+    +fetch(url, extract_as_markdown)
+  }
+  
+  class SequentialThinkingTools {
+    +sequentialthinking(thought, next_thought_needed, thought_number, total_thoughts, is_revision, revises_thought, branch_from_thought, branch_id, needs_more_thoughts)
+  }
+
+%%{init: {'theme': 'neutral', 'themeVariables': { 'fontSize': '12px'}}}%%
+flowchart TB
+  subgraph Emacs["Emacs Environment"]
+    MCP["MCP.el"]
+    MCP -->|Validation| Validation["Validation Tools"]
+    Validation -->|Filesystem| FS["Filesystem Validation"]
+    Validation -->|Git| Git["Git Validation"]
+    Validation -->|GitHub| GH["GitHub Validation"]
+    Validation -->|Memory| Mem["Memory Validation"]
+    Validation -->|iTerm| Term["iTerm Validation"]
+    Validation -->|Fetch| Fetch["Fetch Validation"]
+    Validation -->|Sequential| ST["Sequential Thinking Validation"]
+  end
+  
+  subgraph Servers["MCP Servers"]
+    FSServ["Filesystem Server"]
+    GitServ["Git Server"]
+    GHServ["GitHub Server"]
+    MemServ["Memory Server"]
+    TermServ["iTerm Server"]
+    FetchServ["Fetch Server"]
+    STServ["Sequential Thinking Server"]
+  end
+  
+  FS <-->|validate| FSServ
+  Git <-->|validate| GitServ
+  GH <-->|validate| GHServ
+  Mem <-->|validate| MemServ
+  Term <-->|validate| TermServ
+  Fetch <-->|validate| FetchServ
+  ST <-->|validate| STServ
+  
+  subgraph External["External Systems"]
+    FileSystem["File System"]
+    GitRepo["Git Repository"]
+    GitHubAPI["GitHub API"]
+    Browser["Web Browser"]
+  end
+  
+  FSServ <--> FileSystem
+  GitServ <--> GitRepo
+  GHServ <--> GitHubAPI
+  FetchServ <--> Browser
+  
+  subgraph Reporting["Test Reporting"]
+    Report["Validation Report"]
+    Summary["Summary Statistics"]
+    ServerTests["Server Connection Tests"]
+    IntegrationTests["Integration Tests"]
+  end
+  
+  MCP --> Report
+  Report --> Summary
+  Report --> ServerTests
+  Report --> IntegrationTests

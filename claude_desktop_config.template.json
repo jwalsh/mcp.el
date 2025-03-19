@@ -5,6 +5,8 @@
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "$HOME/projects",
+        "$HOME/.anthropic/sandbox",
+        "$HOME/Documents",
         "$HOME/Desktop"
       ],
       "command": "npx"

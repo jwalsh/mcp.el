@@ -7,6 +7,21 @@
 
 This document contains simple test examples for MCP.el that work with the verified MCP servers in Claude Desktop.
 
+** QR Code 
+
+#+begin_src emacs-lisp :tangle generated/examples/qrcode.el
+;; In Emacs with mcp.el loaded
+(mcp-connect-server
+ "qrcode" 
+ "npx" 
+ '("-y" "@jwalsh/mcp-server-qrcode")
+ :initial-callback
+ (lambda (connection)
+   (message "Connected to %s" (jsonrpc-name connection)))
+ :tools-callback
+ (lambda (connection tools)
+   (message "Available tools: %s" tools)))
+#+end_src
 ** Filesystem Examples
 
 The following examples demonstrate how to use the filesystem MCP server with minimal configuration.
