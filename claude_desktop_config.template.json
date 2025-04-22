@@ -1,0 +1,46 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "$HOME/projects",
+        "$HOME/.anthropic/sandbox",
+        "$HOME/Documents",
+        "$HOME/Desktop"
+      ],
+      "command": "npx"
+    },
+    "git": {
+      "args": [
+        "mcp-server-git"
+      ],
+      "command": "uvx"
+    },
+    "memory": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "command": "npx"
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "qrcode": {
+      "args": [
+        "-y",
+        "@jwalsh/mcp-server-qrcode"
+      ],
+      "command": "npx"
+    },
+    "sequential-thinking": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "command": "npx"
+    }
+  }
+}

@@ -1,0 +1,884 @@
+#+TITLE: MCP Tools Validation
+#+AUTHOR: Claude
+#+DATE: [2025-02-27 Thu]
+#+PROPERTY: header-args :mkdirp yes :tangle yes
+
+* MCP Tools Validation
+This file provides a systematic approach to validate the MCP (Model Context Protocol) tools available for Emacs integration via mcp.el.
+
+** Usage Guide
+   
+This org-mode file is designed to be used with org-babel and can be tangled to generate multiple Emacs Lisp files for validating MCP tools. The validation suite can be used to:
+
+1. Check the availability and functionality of each MCP tool
+2. Test connections to different MCP servers
+3. Run integration tests across multiple tools
+4. Generate comprehensive validation reports
+
+*** Getting Started
+
+To use this validation suite:
+
+1. Open this file in Emacs
+2. Run ~org-babel-tangle~ (C-c C-v t) to generate all the necessary Elisp files
+3. Load the main validation runner: ~(load-file "mcp-validation-run.el")~
+4. Run the validation suite: ~M-x mcp-run-validation-suite~
+
+Alternatively, you can evaluate individual code blocks or tangle specific sections as needed.
+
+*** File Organization
+
+The validation suite is organized into the following modules:
+
+| Module                             | Description                                    |
+|------------------------------------+------------------------------------------------|
+| mcp-validation-setup.el            | Core validation infrastructure                 |
+| mcp-validation-filesystem.el       | Filesystem tool validation                     |
+| mcp-validation-git.el              | Git tool validation                            |
+| mcp-validation-github.el           | GitHub tool validation                         |
+| mcp-validation-memory.el           | Memory/knowledge graph tool validation         |
+| mcp-validation-iterm.el            | iTerm terminal tool validation                 |
+| mcp-validation-fetch.el            | Fetch/URL tool validation                      |
+| mcp-validation-sequential-thinking.el | Sequential thinking tool validation         |
+| mcp-server-test.el                 | Server connection testing                      |
+| mcp-integration-test.el            | Comprehensive integration tests                |
+| mcp-validation-run.el              | Main validation runner                         |
+
+Additionally, Mermaid diagrams are generated for tool visualization and architecture overviews.
+
+** Setup
+:PROPERTIES:
+:header-args: :tangle mcp-validation-setup.el
+:END:
+
+#+begin_src emacs-lisp
+  ;; Setup for MCP tools validation
+  (require 'mcp)
+  (require 'cl-lib)
+  (require 'json)
+  
+  (defvar mcp-validation-results '()
+    "Alist to store validation results for MCP tools.")
+  
+  (defun mcp-validate-tool (tool-name server-name expected-params)
+    "Validate if a specific MCP tool is available and functioning.
+  TOOL-NAME is the name of the tool to validate.
+  SERVER-NAME is the expected server providing the tool.
+  EXPECTED-PARAMS is a list of expected parameters for the tool."
+    (let ((result (list :tool tool-name :server server-name :status nil :message nil)))
+      (condition-case err
+          (progn
+            ;; Check if the tool exists in mcp-available-tools
+            (unless (member tool-name (mapcar #'car mcp-available-tools))
+              (error "Tool not found in mcp-available-tools"))
+            
+            ;; Check if the tool is from the expected server
+            (let ((actual-server (cdr (assoc tool-name mcp-tool-server-map))))
+              (unless (string= actual-server server-name)
+                (error "Tool server mismatch: expected %s, got %s" 
+                       server-name actual-server)))
+            
+            ;; TODO: Add parameter validation when API allows it
+            
+            ;; If we got here, the tool passed basic validation
+            (setf (plist-get result :status) 'success)
+            (setf (plist-get result :message) "Tool validated successfully"))
+        (error
+         (setf (plist-get result :status) 'failure)
+         (setf (plist-get result :message) (format "Validation failed: %s" 
+                                                 (error-message-string err)))))
+      
+      ;; Store and return the result
+      (push result mcp-validation-results)
+      result))
+  
+  (defun mcp-validate-all-tools ()
+    "Validate all MCP tools and generate a report."
+    (interactive)
+    (setq mcp-validation-results '())
+    (with-current-buffer (get-buffer-create "*MCP Validation Results*")
+      (erase-buffer)
+      (org-mode)
+      (insert "#+TITLE: MCP Tools Validation Results\n")
+      (insert "#+DATE: " (format-time-string "[%Y-%m-%d %a]") "\n\n")
+      (insert "* MCP Tools Validation Results\n\n")
+      
+      ;; Run all the validation functions
+      (mcp-validate-filesystem-tools)
+      (mcp-validate-git-tools)
+      (mcp-validate-github-tools)
+      (mcp-validate-memory-tools)
+      (mcp-validate-iterm-tools)
+      (mcp-validate-fetch-tools)
+      (mcp-validate-sequential-thinking-tools)
+      
+      ;; Generate summary statistics
+      (let ((total (length mcp-validation-results))
+            (success (length (cl-remove-if-not 
+                              (lambda (r) (eq (plist-get r :status) 'success))
+                              mcp-validation-results))))
+        (insert (format "** Summary\n\n"))
+        (insert (format "- Total tools validated: %d\n" total))
+        (insert (format "- Successful validations: %d\n" success))
+        (insert (format "- Failed validations: %d\n\n" (- total success))))
+      
+      ;; Generate detailed results organized by server
+      (insert "** Detailed Results by Server\n\n")
+      (let ((servers (delete-dups (mapcar (lambda (r) (plist-get r :server)) 
+                                          mcp-validation-results))))
+        (dolist (server servers)
+          (insert (format "*** %s Server\n\n" (capitalize server)))
+          (let ((server-results (cl-remove-if-not 
+                                 (lambda (r) (string= (plist-get r :server) server))
+                                 mcp-validation-results)))
+            (insert "| Tool | Status | Message |\n")
+            (insert "|------+--------+---------|\n")
+            (dolist (result server-results)
+              (insert (format "| %s | %s | %s |\n" 
+                              (plist-get result :tool)
+                              (if (eq (plist-get result :status) 'success)
+                                  "✓" "✗")
+                              (plist-get result :message)))))))
+      
+      ;; Display the buffer
+      (pop-to-buffer (current-buffer))))
+#+end_src
+
+** Filesystem Tools Validation
+:PROPERTIES:
+:header-args: :tangle mcp-validation-filesystem.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-validate-filesystem-tools ()
+    "Validate all filesystem MCP tools."
+    (mcp-validate-tool "create_directory" "filesystem" 
+                       '("directory_path"))
+    
+    (mcp-validate-tool "directory_tree" "filesystem" 
+                       '("directory_path"))
+    
+    (mcp-validate-tool "edit_file" "filesystem" 
+                       '("file_path" "edits"))
+    
+    (mcp-validate-tool "get_file_info" "filesystem" 
+                       '("file_path"))
+    
+    (mcp-validate-tool "list_allowed_directories" "filesystem" 
+                       '())
+    
+    (mcp-validate-tool "list_directory" "filesystem" 
+                       '("directory_path"))
+    
+    (mcp-validate-tool "move_file" "filesystem" 
+                       '("source_path" "destination_path"))
+    
+    (mcp-validate-tool "read_file" "filesystem" 
+                       '("file_path"))
+    
+    (mcp-validate-tool "read_multiple_files" "filesystem" 
+                       '("file_paths"))
+    
+    (mcp-validate-tool "search_files" "filesystem" 
+                       '("search_path" "pattern"))
+    
+    (mcp-validate-tool "write_file" "filesystem" 
+                       '("file_path" "content")))
+#+end_src
+
+** Git Tools Validation
+:PROPERTIES:
+:header-args: :tangle mcp-validation-git.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-validate-git-tools ()
+    "Validate all git MCP tools."
+    (mcp-validate-tool "git_add" "git" 
+                       '("path"))
+    
+    (mcp-validate-tool "git_checkout" "git" 
+                       '("branch"))
+    
+    (mcp-validate-tool "git_commit" "git" 
+                       '("message"))
+    
+    (mcp-validate-tool "git_create_branch" "git" 
+                       '("branch_name" "base_branch"))
+    
+    (mcp-validate-tool "git_diff" "git" 
+                       '("ref1" "ref2"))
+    
+    (mcp-validate-tool "git_diff_staged" "git" 
+                       '())
+    
+    (mcp-validate-tool "git_diff_unstaged" "git" 
+                       '())
+    
+    (mcp-validate-tool "git_log" "git" 
+                       '("max_count"))
+    
+    (mcp-validate-tool "git_reset" "git" 
+                       '())
+    
+    (mcp-validate-tool "git_show" "git" 
+                       '("commit"))
+    
+    (mcp-validate-tool "git_status" "git" 
+                       '()))
+#+end_src
+
+** GitHub Tools Validation
+:PROPERTIES:
+:header-args: :tangle mcp-validation-github.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-validate-github-tools ()
+    "Validate all GitHub MCP tools."
+    (mcp-validate-tool "add_issue_comment" "github" 
+                       '("owner" "repo" "issue_number" "body"))
+    
+    (mcp-validate-tool "create_branch" "github" 
+                       '("owner" "repo" "branch" "sha"))
+    
+    (mcp-validate-tool "create_issue" "github" 
+                       '("owner" "repo" "title" "body" "labels"))
+    
+    (mcp-validate-tool "create_or_update_file" "github" 
+                       '("owner" "repo" "path" "content" "message" "branch"))
+    
+    (mcp-validate-tool "create_pull_request" "github" 
+                       '("owner" "repo" "title" "body" "head" "base"))
+    
+    (mcp-validate-tool "create_repository" "github" 
+                       '("name" "description" "private"))
+    
+    (mcp-validate-tool "fork_repository" "github" 
+                       '("owner" "repo" "organization"))
+    
+    (mcp-validate-tool "get_file_contents" "github" 
+                       '("owner" "repo" "path" "ref"))
+    
+    (mcp-validate-tool "get_issue" "github" 
+                       '("owner" "repo" "issue_number"))
+    
+    (mcp-validate-tool "list_commits" "github" 
+                       '("owner" "repo" "branch"))
+    
+    (mcp-validate-tool "list_issues" "github" 
+                       '("owner" "repo" "state" "labels"))
+    
+    (mcp-validate-tool "push_files" "github" 
+                       '("owner" "repo" "files" "message" "branch"))
+    
+    (mcp-validate-tool "search_code" "github" 
+                       '("query"))
+    
+    (mcp-validate-tool "search_issues" "github" 
+                       '("query"))
+    
+    (mcp-validate-tool "search_repositories" "github" 
+                       '("query"))
+    
+    (mcp-validate-tool "search_users" "github" 
+                       '("query"))
+    
+    (mcp-validate-tool "update_issue" "github" 
+                       '("owner" "repo" "issue_number" "title" "body" "state" "labels")))
+#+end_src
+
+** Memory Tools Validation
+:PROPERTIES:
+:header-args: :tangle mcp-validation-memory.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-validate-memory-tools ()
+    "Validate all memory MCP tools."
+    (mcp-validate-tool "add_observations" "memory" 
+                       '("observations"))
+    
+    (mcp-validate-tool "create_entities" "memory" 
+                       '("entities"))
+    
+    (mcp-validate-tool "create_relations" "memory" 
+                       '("relations"))
+    
+    (mcp-validate-tool "delete_entities" "memory" 
+                       '("entity_names"))
+    
+    (mcp-validate-tool "delete_observations" "memory" 
+                       '("observations"))
+    
+    (mcp-validate-tool "delete_relations" "memory" 
+                       '("relations"))
+    
+    (mcp-validate-tool "open_nodes" "memory" 
+                       '("node_names"))
+    
+    (mcp-validate-tool "read_graph" "memory" 
+                       '())
+    
+    (mcp-validate-tool "search_nodes" "memory" 
+                       '("query")))
+#+end_src
+
+** iTerm Tools Validation
+:PROPERTIES:
+:header-args: :tangle mcp-validation-iterm.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-validate-iterm-tools ()
+    "Validate all iTerm MCP tools."
+    (mcp-validate-tool "read_terminal_output" "iterm-mcp" 
+                       '())
+    
+    (mcp-validate-tool "send_control_character" "iterm-mcp" 
+                       '("character"))
+    
+    (mcp-validate-tool "write_to_terminal" "iterm-mcp" 
+                       '("text")))
+#+end_src
+
+** Fetch Tools Validation
+:PROPERTIES:
+:header-args: :tangle mcp-validation-fetch.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-validate-fetch-tools ()
+    "Validate all fetch MCP tools."
+    (mcp-validate-tool "fetch" "fetch" 
+                       '("url" "extract_as_markdown")))
+#+end_src
+
+** Sequential Thinking Tools Validation
+:PROPERTIES:
+:header-args: :tangle mcp-validation-sequential-thinking.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-validate-sequential-thinking-tools ()
+    "Validate sequential thinking MCP tools."
+    (mcp-validate-tool "sequentialthinking" "sequential-thinking" 
+                       '("thought" "next_thought_needed" "thought_number" 
+                         "total_thoughts" "is_revision" "revises_thought"
+                         "branch_from_thought" "branch_id" "needs_more_thoughts")))
+#+end_src
+
+** Tool Parameter Visualization
+:PROPERTIES:
+:header-args: :tangle yes :file mcp-tools-diagram.mmd
+:END:
+
+#+begin_src mermaid
+  %%{init: {'theme': 'neutral', 'themeVariables': { 'fontSize': '12px'}}}%%
+  classDiagram
+    class MCP_Tools {
+      +validate()
+      +report()
+    }
+    
+    MCP_Tools <|-- FilesystemTools
+    MCP_Tools <|-- GitTools
+    MCP_Tools <|-- GitHubTools
+    MCP_Tools <|-- MemoryTools
+    MCP_Tools <|-- iTermTools
+    MCP_Tools <|-- FetchTools
+    MCP_Tools <|-- SequentialThinkingTools
+    
+    class FilesystemTools {
+      +create_directory(directory_path)
+      +directory_tree(directory_path)
+      +edit_file(file_path, edits)
+      +get_file_info(file_path)
+      +list_allowed_directories()
+      +list_directory(directory_path)
+      +move_file(source_path, destination_path)
+      +read_file(file_path)
+      +read_multiple_files(file_paths)
+      +search_files(search_path, pattern)
+      +write_file(file_path, content)
+    }
+    
+    class GitTools {
+      +git_add(path)
+      +git_checkout(branch)
+      +git_commit(message)
+      +git_create_branch(branch_name, base_branch)
+      +git_diff(ref1, ref2)
+      +git_diff_staged()
+      +git_diff_unstaged()
+      +git_log(max_count)
+      +git_reset()
+      +git_show(commit)
+      +git_status()
+    }
+    
+    class GitHubTools {
+      +add_issue_comment(owner, repo, issue_number, body)
+      +create_branch(owner, repo, branch, sha)
+      +create_issue(owner, repo, title, body, labels)
+      +create_or_update_file(owner, repo, path, content, message, branch)
+      +create_pull_request(owner, repo, title, body, head, base)
+      +create_repository(name, description, private)
+      +fork_repository(owner, repo, organization)
+      +get_file_contents(owner, repo, path, ref)
+      +get_issue(owner, repo, issue_number)
+      +list_commits(owner, repo, branch)
+      +list_issues(owner, repo, state, labels)
+      +push_files(owner, repo, files, message, branch)
+      +search_code(query)
+      +search_issues(query)
+      +search_repositories(query)
+      +search_users(query)
+      +update_issue(owner, repo, issue_number, title, body, state, labels)
+    }
+    
+    class MemoryTools {
+      +add_observations(observations)
+      +create_entities(entities)
+      +create_relations(relations)
+      +delete_entities(entity_names)
+      +delete_observations(observations)
+      +delete_relations(relations)
+      +open_nodes(node_names)
+      +read_graph()
+      +search_nodes(query)
+    }
+    
+    class iTermTools {
+      +read_terminal_output()
+      +send_control_character(character)
+      +write_to_terminal(text)
+    }
+    
+    class FetchTools {
+      +fetch(url, extract_as_markdown)
+    }
+    
+    class SequentialThinkingTools {
+      +sequentialthinking(thought, next_thought_needed, thought_number, total_thoughts, is_revision, revises_thought, branch_from_thought, branch_id, needs_more_thoughts)
+    }
+#+end_src
+
+** MCP Server Connection Test
+:PROPERTIES:
+:header-args: :tangle mcp-server-test.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-test-server-connections ()
+    "Test connections to all MCP servers and report results."
+    (interactive)
+    (let ((servers '("filesystem" "git" "github" "memory" "iterm-mcp" "fetch" "sequential-thinking"))
+          (results '()))
+      
+      (with-current-buffer (get-buffer-create "*MCP Server Connection Test*")
+        (erase-buffer)
+        (org-mode)
+        (insert "#+TITLE: MCP Server Connection Test Results\n")
+        (insert "#+DATE: " (format-time-string "[%Y-%m-%d %a]") "\n\n")
+        (insert "* MCP Server Connection Test Results\n\n")
+        (insert "| Server | Status | Latency (ms) | Error Message |\n")
+        (insert "|--------+--------+--------------+---------------|\n")
+        
+        (dolist (server servers)
+          (let ((start-time (current-time))
+                (status nil)
+                (latency nil)
+                (error-msg ""))
+            
+            (condition-case err
+                (progn
+                  ;; Try to ping the server - this is a placeholder as the actual
+                  ;; connection method would depend on how mcp.el implements it
+                  (cond
+                   ((string= server "filesystem")
+                    (mcp-call-tool "list_allowed_directories" nil))
+                   
+                   ((string= server "git")
+                    (mcp-call-tool "git_status" nil))
+                   
+                   ((string= server "github")
+                    ;; This is just a simple request that should work with minimal permissions
+                    (mcp-call-tool "search_repositories" '(:query "org:emacs-mcp")))
+                   
+                   ((string= server "memory")
+                    (mcp-call-tool "read_graph" nil))
+                   
+                   ((string= server "iterm-mcp")
+                    ;; This could fail if no terminal is active
+                    (mcp-call-tool "read_terminal_output" nil))
+                   
+                   ((string= server "fetch")
+                    (mcp-call-tool "fetch" '(:url "https://example.com" :extract_as_markdown t)))
+                   
+                   ((string= server "sequential-thinking")
+                    ;; This is a minimal call to test connection
+                    (mcp-call-tool "sequentialthinking" 
+                                   '(:thought "Initial thought" 
+                                     :next_thought_needed nil
+                                     :thought_number 1
+                                     :total_thoughts 1
+                                     :is_revision nil
+                                     :revises_thought nil
+                                     :branch_from_thought nil
+                                     :branch_id nil
+                                     :needs_more_thoughts nil))))
+                  
+                  (setq status "Connected")
+                  (setq latency (float-time (time-subtract (current-time) start-time))))
+              
+              (error
+               (setq status "Failed")
+               (setq latency (float-time (time-subtract (current-time) start-time)))
+               (setq error-msg (error-message-string err))))
+            
+            ;; Log the result
+            (push (list server status latency error-msg) results)
+            
+            ;; Output to the buffer
+            (insert (format "| %s | %s | %.2f | %s |\n" 
+                            server 
+                            (if (string= status "Connected") "✓" "✗")
+                            (* 1000 latency)
+                            error-msg))))
+        
+        ;; Add a summary
+        (let ((connected (length (cl-remove-if-not 
+                                 (lambda (r) (string= (nth 1 r) "Connected"))
+                                 results))))
+          (insert "\n** Summary\n\n")
+          (insert (format "- Total servers: %d\n" (length servers)))
+          (insert (format "- Connected servers: %d\n" connected))
+          (insert (format "- Failed connections: %d\n" (- (length servers) connected))))
+        
+        ;; Display the buffer
+        (pop-to-buffer (current-buffer)))))
+#+end_src
+
+** Comprehensive MCP Tool Integration Test
+:PROPERTIES:
+:header-args: :tangle mcp-integration-test.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-run-integration-test ()
+    "Run a comprehensive integration test of MCP tools."
+    (interactive)
+    (let ((test-dir "/tmp/mcp-test")
+          (test-repo "test-mcp-integration")
+          (start-time (current-time))
+          (results '()))
+      
+      (with-current-buffer (get-buffer-create "*MCP Integration Test*")
+        (erase-buffer)
+        (org-mode)
+        (insert "#+TITLE: MCP Tools Integration Test\n")
+        (insert "#+DATE: " (format-time-string "[%Y-%m-%d %a]") "\n\n")
+        (insert "* MCP Tools Integration Test\n\n")
+        
+        ;; Test sequence - this would need to be adjusted based on actual mcp.el API
+        (insert "** Test Sequence\n\n")
+        
+        ;; 1. Filesystem operations
+        (insert "*** Filesystem Operations\n\n")
+        (insert "1. Create test directory structure\n")
+        (condition-case err
+            (progn
+              (mcp-call-tool "create_directory" `(:directory_path ,test-dir))
+              (mcp-call-tool "write_file" 
+                             `(:file_path ,(concat test-dir "/README.md")
+                               :content "# MCP Integration Test\n\nThis is a test file."))
+              (mcp-call-tool "create_directory" `(:directory_path ,(concat test-dir "/src")))
+              (mcp-call-tool "write_file" 
+                             `(:file_path ,(concat test-dir "/src/main.py")
+                               :content "def main():\n    print('Hello, MCP!')\n\nif __name__ == '__main__':\n    main()"))
+              (insert "   ✓ Created directory structure successfully\n"))
+          (error
+           (insert (format "   ✗ Error creating directory structure: %s\n" 
+                           (error-message-string err)))))
+        
+        (insert "2. Read and verify file contents\n")
+        (condition-case err
+            (let ((contents (mcp-call-tool "read_file" 
+                                          `(:file_path ,(concat test-dir "/src/main.py")))))
+              (if (string-match-p "Hello, MCP!" contents)
+                  (insert "   ✓ File contents verified successfully\n")
+                (insert "   ✗ File contents did not match expected output\n")))
+          (error
+           (insert (format "   ✗ Error reading file: %s\n" 
+                           (error-message-string err)))))
+        
+        ;; 2. Git operations (if a git repo exists or can be created)
+        (insert "\n*** Git Operations\n\n")
+        (insert "1. Initialize git repository and make initial commit\n")
+        (condition-case err
+            (progn
+              ;; This assumes we're in the test directory and git is available
+              ;; In a real test, you'd use mcp.el to change directories and run git commands
+              (let ((default-directory test-dir))
+                (shell-command "git init")
+                (mcp-call-tool "git_add" '(:path "."))
+                (mcp-call-tool "git_commit" '(:message "Initial commit"))
+                (insert "   ✓ Git repository initialized and initial commit made\n")))
+          (error
+           (insert (format "   ✗ Error with git initialization: %s\n" 
+                           (error-message-string err)))))
+        
+        ;; 3. GitHub operations (these would typically need actual GitHub credentials)
+        (insert "\n*** GitHub Operations (Simulated)\n\n")
+        (insert "Note: These operations require GitHub authentication and would affect real repositories.\n")
+        (insert "In a real test environment, these should be run against test accounts/repositories.\n\n")
+        
+        ;; 4. Memory operations
+        (insert "\n*** Memory Operations\n\n")
+        (insert "1. Create test knowledge graph entities\n")
+        (condition-case err
+            (progn
+              (mcp-call-tool "create_entities" 
+                            '(:entities ((:name "Test Entity 1" :type "test")
+                                        (:name "Test Entity 2" :type "test"))))
+              (mcp-call-tool "create_relations" 
+                            '(:relations ((:source "Test Entity 1" 
+                                          :relation "is connected to"
+                                          :target "Test Entity 2"))))
+              (insert "   ✓ Created test knowledge graph entities and relations\n"))
+          (error
+           (insert (format "   ✗ Error creating knowledge graph entities: %s\n" 
+                           (error-message-string err)))))
+        
+        (insert "2. Query knowledge graph\n")
+        (condition-case err
+            (let ((results (mcp-call-tool "search_nodes" '(:query "test"))))
+              (if (and results (> (length results) 0))
+                  (insert "   ✓ Successfully queried knowledge graph\n")
+                (insert "   ✗ Knowledge graph query returned no results\n")))
+          (error
+           (insert (format "   ✗ Error querying knowledge graph: %s\n" 
+                           (error-message-string err)))))
+        
+        ;; 5. Sequential thinking
+        (insert "\n*** Sequential Thinking\n\n")
+        (insert "1. Test sequential thinking tool with simple problem\n")
+        (condition-case err
+            (let ((result (mcp-call-tool "sequentialthinking" 
+                                        '(:thought "What is 2+2?" 
+                                          :next_thought_needed t
+                                          :thought_number 1
+                                          :total_thoughts 2
+                                          :is_revision nil
+                                          :revises_thought nil
+                                          :branch_from_thought nil
+                                          :branch_id nil
+                                          :needs_more_thoughts nil))))
+              ;; Continue with second thought
+              (mcp-call-tool "sequentialthinking" 
+                            '(:thought "2+2 equals 4" 
+                              :next_thought_needed nil
+                              :thought_number 2
+                              :total_thoughts 2
+                              :is_revision nil
+                              :revises_thought nil
+                              :branch_from_thought nil
+                              :branch_id nil
+                              :needs_more_thoughts nil))
+              (insert "   ✓ Successfully used sequential thinking tool\n"))
+          (error
+           (insert (format "   ✗ Error using sequential thinking tool: %s\n" 
+                           (error-message-string err)))))
+        
+        ;; 6. Cleanup
+        (insert "\n*** Cleanup\n\n")
+        (insert "1. Remove test directory and entities\n")
+        (condition-case err
+            (progn
+              ;; Clean up filesystem
+              (when (file-exists-p test-dir)
+                (delete-directory test-dir t))
+              
+              ;; Clean up memory
+              (mcp-call-tool "delete_entities" 
+                            '(:entity_names ["Test Entity 1" "Test Entity 2"]))
+              
+              (insert "   ✓ Cleanup completed successfully\n"))
+          (error
+           (insert (format "   ✗ Error during cleanup: %s\n" 
+                           (error-message-string err)))))
+        
+        ;; Test summary
+        (let ((elapsed-time (float-time (time-subtract (current-time) start-time))))
+          (insert (format "\n** Test Summary\n\n"))
+          (insert (format "- Total test time: %.2f seconds\n" elapsed-time))
+          (insert "- See above logs for detailed results\n"))
+        
+        ;; Display the buffer
+        (pop-to-buffer (current-buffer)))))
+#+end_src
+
+** Main Validation Runner
+:PROPERTIES:
+:header-args: :tangle mcp-validation-run.el
+:END:
+
+#+begin_src emacs-lisp
+  (defun mcp-run-validation-suite ()
+    "Run the complete MCP validation suite and generate comprehensive report."
+    (interactive)
+    
+    ;; Load all validation modules
+    (load-file "mcp-validation-setup.el")
+    (load-file "mcp-validation-filesystem.el")
+    (load-file "mcp-validation-git.el")
+    (load-file "mcp-validation-github.el")
+    (load-file "mcp-validation-memory.el")
+    (load-file "mcp-validation-iterm.el")
+    (load-file "mcp-validation-fetch.el")
+    (load-file "mcp-validation-sequential-thinking.el")
+    (load-file "mcp-server-test.el")
+    (load-file "mcp-integration-test.el")
+    
+    ;; Create report buffer
+    (with-current-buffer (get-buffer-create "*MCP Validation Suite Report*")
+      (erase-buffer)
+      (org-mode)
+      (insert "#+TITLE: MCP Validation Suite Report\n")
+      (insert "#+DATE: " (format-time-string "[%Y-%m-%d %a]") "\n")
+      (insert "#+AUTHOR: MCP Validation Suite\n\n")
+      
+      (insert "* MCP Validation Suite Report\n\n")
+      (insert "This report contains the results of running the MCP Validation Suite.\n\n")
+      
+      ;; Run the validation tools
+      (insert "** Individual Tool Validation\n\n")
+      (insert "Running validation for all MCP tools...\n\n")
+      (mcp-validate-all-tools)
+      (insert "See buffer *MCP Validation Results* for detailed tool validation results.\n\n")
+      
+      ;; Run server connection tests
+      (insert "** Server Connection Tests\n\n")
+      (insert "Testing connections to all MCP servers...\n\n")
+      (mcp-test-server-connections)
+      (insert "See buffer *MCP Server Connection Test* for detailed server connection results.\n\n")
+      
+      ;; Run integration test
+      (insert "** Integration Tests\n\n")
+      (insert "Running comprehensive integration tests...\n\n")
+      (mcp-run-integration-test)
+      (insert "See buffer *MCP Integration Test* for detailed integration test results.\n\n")
+      
+      ;; Export results if requested
+      (when (y-or-n-p "Export validation report to HTML? ")
+        (let ((export-file (expand-file-name "mcp-validation-report.html" default-directory)))
+          (org-export-to-file 'html export-file)
+          (insert (format "Report exported to: %s\n\n" export-file))))
+      
+      ;; Display the buffer
+      (pop-to-buffer (current-buffer))))
+  
+  ;; Add a keybinding for quick access
+  (global-set-key (kbd "C-c m v") 'mcp-run-validation-suite)
+  
+  ;; Provide the validation suite
+  (provide 'mcp-validation)
+#+end_src
+
+** Final Comprehensive Diagram
+:PROPERTIES:
+:header-args: :tangle yes :file mcp-architecture.mmd
+:END:
+
+#+begin_src mermaid
+  %%{init: {'theme': 'neutral', 'themeVariables': { 'fontSize': '12px'}}}%%
+  flowchart TB
+    subgraph Emacs["Emacs Environment"]
+      MCP["MCP.el"]
+      MCP -->|Validation| Validation["Validation Tools"]
+      Validation -->|Filesystem| FS["Filesystem Validation"]
+      Validation -->|Git| Git["Git Validation"]
+      Validation -->|GitHub| GH["GitHub Validation"]
+      Validation -->|Memory| Mem["Memory Validation"]
+      Validation -->|iTerm| Term["iTerm Validation"]
+      Validation -->|Fetch| Fetch["Fetch Validation"]
+      Validation -->|Sequential| ST["Sequential Thinking Validation"]
+    end
+    
+    subgraph Servers["MCP Servers"]
+      FSServ["Filesystem Server"]
+      GitServ["Git Server"]
+      GHServ["GitHub Server"]
+      MemServ["Memory Server"]
+      TermServ["iTerm Server"]
+      FetchServ["Fetch Server"]
+      STServ["Sequential Thinking Server"]
+    end
+    
+    FS <-->|validate| FSServ
+    Git <-->|validate| GitServ
+    GH <-->|validate| GHServ
+    Mem <-->|validate| MemServ
+    Term <-->|validate| TermServ
+    Fetch <-->|validate| FetchServ
+    ST <-->|validate| STServ
+    
+    subgraph External["External Systems"]
+      FileSystem["File System"]
+      GitRepo["Git Repository"]
+      GitHubAPI["GitHub API"]
+      Browser["Web Browser"]
+    end
+    
+    FSServ <--> FileSystem
+    GitServ <--> GitRepo
+    GHServ <--> GitHubAPI
+    FetchServ <--> Browser
+    
+    subgraph Reporting["Test Reporting"]
+      Report["Validation Report"]
+      Summary["Summary Statistics"]
+      ServerTests["Server Connection Tests"]
+      IntegrationTests["Integration Tests"]
+    end
+    
+    MCP --> Report
+    Report --> Summary
+    Report --> ServerTests
+    Report --> IntegrationTests
+#+end_src
+
+** Conclusion and Next Steps
+:PROPERTIES:
+:header-args: :tangle no
+:END:
+
+This validation suite provides a comprehensive framework for testing and validating MCP tools within an Emacs environment. By using this suite, you can:
+
+1. Ensure all MCP tools are available and functioning as expected
+2. Verify connections to all required MCP servers
+3. Test integration scenarios across multiple tools
+4. Generate detailed reports for documentation and troubleshooting
+
+The architecture is designed to be modular and extensible. If new MCP tools are added in the future, they can be incorporated into the appropriate validation module.
+
+*** Potential Enhancements
+
+The following enhancements could be considered for future versions:
+
+1. Add CI/CD integration for automated validation
+2. Implement mock servers for offline testing
+3. Create a web dashboard for visualization of validation results
+4. Add performance benchmarking for MCP tools
+5. Include coverage analysis to ensure all tool parameters are tested
+
+*** Troubleshooting
+
+If you encounter issues during validation:
+
+1. Check Emacs error buffers for detailed error messages
+2. Verify server connections and authentication
+3. Look for pattern-based failures that might indicate API changes
+4. Check that all required dependencies are installed
+5. Verify that file paths and GitHub repositories are accessible

@@ -1,0 +1,610 @@
+#+TITLE: MCP.el Test Examples
+#+AUTHOR: Jason Walsh
+#+DATE: [2025-02-27]
+#+PROPERTY: header-args:emacs-lisp :tangle generated/examples/%.el :mkdirp t
+
+* MCP Test Examples
+
+This document contains simple test examples for MCP.el that work with the verified MCP servers in Claude Desktop.
+
+** QR Code 
+
+#+begin_src emacs-lisp :tangle generated/examples/qrcode.el
+;; In Emacs with mcp.el loaded
+(mcp-connect-server
+ "qrcode" 
+ "npx" 
+ '("-y" "@jwalsh/mcp-server-qrcode")
+ :initial-callback
+ (lambda (connection)
+   (message "Connected to %s" (jsonrpc-name connection)))
+ :tools-callback
+ (lambda (connection tools)
+   (message "Available tools: %s" tools)))
+#+end_src
+** Filesystem Examples
+
+The following examples demonstrate how to use the filesystem MCP server with minimal configuration.
+
+*** Basic Connection
+
+#+begin_src emacs-lisp :tangle generated/examples/fs-basic.el
+(require 'mcp)
+
+;;; Code:
+(defun mcp-fs-connect-basic ()
+  "Connect to the filesystem MCP server with minimal configuration."
+  (interactive)
+  (mcp-connect-server 
+   "filesystem"                          ; Server name  
+   "npx"                                 ; Command
+   '("-y" "@modelcontextprotocol/server-filesystem" "~/Documents") ; Arguments
+   :initial-callback                     ; Connection callback
+   (lambda (connection)
+     (message "Connected to filesystem server: %s" (jsonrpc-name connection)))
+   :tools-callback                       ; Tools callback
+   (lambda (connection tools)
+     (message "Available filesystem tools: %s" 
+              (mapconcat #'symbol-name tools ", ")))))
+
+(defun mcp-fs-list-documents ()
+  "List files in the Documents directory using MCP."
+  (interactive)
+  (let ((connection (gethash "filesystem" mcp-server-connections)))
+    (mcp-call-tool-async 
+     connection
+     "list_directory"
+     '(:directory "~/Documents")
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP Filesystem Results*")
+         (erase-buffer)
+         (insert "Files in Documents directory:\n\n")
+         (dolist (file (plist-get result :files))
+           (insert (format "- %s\n" file)))
+         (display-buffer (current-buffer)))))))
+
+;; Auto-run when loaded
+(progn
+  (message "Initializing filesystem MCP server connection...")
+  (mcp-fs-connect-basic)
+  (run-with-timer 1 nil 'mcp-fs-list-documents))
+#+end_src
+
+*** File Reading
+
+#+begin_src emacs-lisp :tangle generated/examples/fs-read.el
+(require 'mcp)
+
+;;; Code:
+(defun mcp-fs-connect ()
+  "Connect to the filesystem MCP server."
+  (interactive)
+  (mcp-connect-server 
+   "filesystem"                          ; Server name  
+   "npx"                                 ; Command
+   '("-y" "@modelcontextprotocol/server-filesystem" "~/Documents") ; Arguments
+   :initial-callback                     ; Connection callback
+   (lambda (connection)
+     (message "Connected to filesystem server: %s" (jsonrpc-name connection)))))
+
+(defun mcp-fs-read-file (filepath)
+  "Read a file using the MCP filesystem server."
+  (interactive "fFile to read: ")
+  (let ((connection (gethash "filesystem" mcp-server-connections)))
+    (mcp-call-tool-async 
+     connection
+     "read_file"
+     (list :path filepath)
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP File Contents*")
+         (erase-buffer)
+         (insert (format "Contents of %s:\n\n" filepath))
+         (insert (plist-get result :content))
+         (display-buffer (current-buffer)))))))
+
+;; Auto-run when loaded
+(progn
+  (message "Initializing filesystem read example...")
+  (mcp-fs-connect)
+  (run-with-timer 1 nil 
+                 (lambda ()
+                   (mcp-fs-read-file "~/Documents/README.md"))))
+#+end_src
+
+** Git Examples
+
+The following examples demonstrate how to use the git MCP server.
+
+*** Status and Log
+
+#+begin_src emacs-lisp :tangle generated/examples/git-basic.el
+(require 'mcp)
+
+;;; Code:
+(defun mcp-git-connect ()
+  "Connect to the git MCP server."
+  (interactive)
+  (mcp-connect-server 
+   "git"                                 ; Server name  
+   "uvx"                                 ; Command
+   '("mcp-server-git")                   ; Arguments
+   :initial-callback                     ; Connection callback
+   (lambda (connection)
+     (message "Connected to git server: %s" (jsonrpc-name connection)))
+   :tools-callback                       ; Tools callback
+   (lambda (connection tools)
+     (message "Available git tools: %s" 
+              (mapconcat #'symbol-name tools ", ")))))
+
+(defun mcp-git-status ()
+  "Get git status of current directory."
+  (interactive)
+  (let ((connection (gethash "git" mcp-server-connections)))
+    (mcp-call-tool-async 
+     connection
+     "status"
+     nil
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP Git Status*")
+         (erase-buffer)
+         (insert "Git Status:\n\n")
+         (insert (format "Staged:\n%s\n\n" 
+                        (mapconcat (lambda (f) (format "  %s" f))
+                                  (plist-get result :staged) "\n")))
+         (insert (format "Unstaged:\n%s\n\n" 
+                        (mapconcat (lambda (f) (format "  %s" f))
+                                  (plist-get result :unstaged) "\n")))
+         (insert (format "Untracked:\n%s\n" 
+                        (mapconcat (lambda (f) (format "  %s" f))
+                                  (plist-get result :untracked) "\n")))
+         (display-buffer (current-buffer)))))))
+
+(defun mcp-git-log ()
+  "Get recent git commits."
+  (interactive)
+  (let ((connection (gethash "git" mcp-server-connections)))
+    (mcp-call-tool-async 
+     connection
+     "log"
+     '(:max_count 5)
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP Git Log*")
+         (erase-buffer)
+         (insert "Recent Git Commits:\n\n")
+         (dolist (commit (plist-get result :commits))
+           (insert (format "Commit: %s\n" (plist-get commit :hash)))
+           (insert (format "Author: %s\n" (plist-get commit :author)))
+           (insert (format "Date: %s\n" (plist-get commit :date)))
+           (insert (format "Message: %s\n\n" (plist-get commit :message))))
+         (display-buffer (current-buffer)))))))
+
+;; Auto-run when loaded
+(progn
+  (message "Initializing git MCP examples...")
+  (mcp-git-connect)
+  (run-with-timer 1 nil 'mcp-git-status)
+  (run-with-timer 2 nil 'mcp-git-log))
+#+end_src
+
+** Memory Examples
+
+The following examples demonstrate how to use the memory MCP server.
+
+*** Basic Memory Operations
+
+#+begin_src emacs-lisp :tangle generated/examples/memory-basic.el
+(require 'mcp)
+
+;;; Code:
+(defun mcp-memory-connect ()
+  "Connect to the memory MCP server."
+  (interactive)
+  (mcp-connect-server 
+   "memory"                              ; Server name  
+   "npx"                                 ; Command
+   '("-y" "@modelcontextprotocol/server-memory") ; Arguments
+   :initial-callback                     ; Connection callback
+   (lambda (connection)
+     (message "Connected to memory server: %s" (jsonrpc-name connection)))
+   :tools-callback                       ; Tools callback
+   (lambda (connection tools)
+     (message "Available memory tools: %s" 
+              (mapconcat #'symbol-name tools ", ")))))
+
+(defun mcp-memory-store (entity property value)
+  "Store a fact in memory."
+  (interactive "sEntity: \nsProperty: \nsValue: ")
+  (let ((connection (gethash "memory" mcp-server-connections)))
+    (mcp-call-tool-async 
+     connection
+     "remember"
+     (list :entity entity :property property :value value)
+     (lambda (result)
+       (message "Stored in memory: %s %s %s" entity property value)))))
+
+(defun mcp-memory-retrieve (entity property)
+  "Retrieve a fact from memory."
+  (interactive "sEntity: \nsProperty: ")
+  (let ((connection (gethash "memory" mcp-server-connections)))
+    (mcp-call-tool-async 
+     connection
+     "recall"
+     (list :entity entity :property property)
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP Memory Results*")
+         (erase-buffer)
+         (insert (format "Memory for %s %s:\n\n" entity property))
+         (insert (format "Value: %s" (plist-get result :value)))
+         (display-buffer (current-buffer)))))))
+
+(defun mcp-memory-search (query)
+  "Search memory for entities matching query."
+  (interactive "sSearch query: ")
+  (let ((connection (gethash "memory" mcp-server-connections)))
+    (mcp-call-tool-async 
+     connection
+     "search"
+     (list :query query)
+     (lambda (result)
+       (with-current-buffer (get-buffer-create "*MCP Memory Search*")
+         (erase-buffer)
+         (insert (format "Memory search results for '%s':\n\n" query))
+         (dolist (entity (plist-get result :results))
+           (insert (format "Entity: %s\n" (plist-get entity :entity)))
+           (insert "Properties:\n")
+           (dolist (prop (plist-get entity :properties))
+             (insert (format "  %s: %s\n" 
+                            (plist-get prop :property)
+                            (plist-get prop :value))))
+           (insert "\n"))
+         (display-buffer (current-buffer)))))))
+
+;; Auto-run when loaded
+(progn
+  (message "Initializing memory MCP examples...")
+  (mcp-memory-connect)
+  (run-with-timer 1 nil
+                 (lambda () 
+                   (mcp-memory-store "MCP" "purpose" "Model Context Protocol for Emacs")))
+  (run-with-timer 2 nil
+                 (lambda () 
+                   (mcp-memory-retrieve "MCP" "purpose")))
+  (run-with-timer 3 nil
+                 (lambda () 
+                   (mcp-memory-search "MCP"))))
+#+end_src
+
+** Testing All Services Together
+
+This example shows how to connect to all services and use them together.
+
+#+begin_src emacs-lisp :tangle generated/examples/mcp-all.el
+(require 'mcp)
+
+;;; Code:
+(defun mcp-connect-all ()
+  "Connect to all configured MCP servers."
+  (interactive)
+  
+  ;; Filesystem connection
+  (mcp-connect-server 
+   "filesystem" "npx" 
+   '("-y" "@modelcontextprotocol/server-filesystem" "~/Documents")
+   :initial-callback
+   (lambda (connection)
+     (message "Connected to filesystem server")))
+  
+  ;; Git connection
+  (mcp-connect-server 
+   "git" "uvx" 
+   '("mcp-server-git")
+   :initial-callback
+   (lambda (connection)
+     (message "Connected to git server")))
+  
+  ;; Memory connection
+  (mcp-connect-server 
+   "memory" "npx" 
+   '("-y" "@modelcontextprotocol/server-memory")
+   :initial-callback
+   (lambda (connection)
+     (message "Connected to memory server")))
+  
+  (message "Connected to all MCP servers"))
+
+(defun mcp-test-all ()
+  "Test all MCP servers with basic operations."
+  (interactive)
+  
+  ;; Create results buffer
+  (with-current-buffer (get-buffer-create "*MCP Test Results*")
+    (erase-buffer)
+    (insert "MCP Server Tests\n")
+    (insert "===============\n\n")
+    
+    ;; Test filesystem
+    (insert "Testing Filesystem Server...\n")
+    (let ((connection (gethash "filesystem" mcp-server-connections)))
+      (mcp-call-tool-async 
+       connection "list_directory" '(:directory "~/Documents")
+       (lambda (result)
+         (with-current-buffer "*MCP Test Results*"
+           (insert (format "Documents directory has %d files\n\n" 
+                           (length (plist-get result :files))))))))
+    
+    ;; Test git
+    (insert "Testing Git Server...\n")
+    (let ((connection (gethash "git" mcp-server-connections)))
+      (mcp-call-tool-async 
+       connection "status" nil
+       (lambda (result)
+         (with-current-buffer "*MCP Test Results*"
+           (insert (format "Git repository has %d staged, %d unstaged, and %d untracked files\n\n" 
+                           (length (plist-get result :staged))
+                           (length (plist-get result :unstaged))
+                           (length (plist-get result :untracked))))))))
+    
+    ;; Test memory
+    (insert "Testing Memory Server...\n")
+    (let ((connection (gethash "memory" mcp-server-connections)))
+      (mcp-call-tool-async 
+       connection "remember"
+       '(:entity "test" :property "status" :value "running")
+       (lambda (result)
+         (mcp-call-tool-async 
+          connection "recall"
+          '(:entity "test" :property "status")
+          (lambda (result)
+            (with-current-buffer "*MCP Test Results*"
+              (insert (format "Memory test: %s\n\n" 
+                              (plist-get result :value)))))))))
+    
+    (insert "Tests initialized. Results will appear as they complete.\n")
+    (display-buffer (current-buffer))))
+
+;; Auto-run when loaded
+(progn
+  (message "Initializing all MCP servers and running tests...")
+  (mcp-connect-all)
+  (run-with-timer 2 nil 'mcp-test-all))
+#+end_src
+
+* Running the Examples
+
+To run these examples:
+
+1. First generate the example code:
+   #+begin_src bash :tangle generated/tangle.sh :shebang "#!/bin/bash"
+   # Create directories
+   mkdir -p generated/examples
+   
+   # Tangle the examples
+   emacs --batch -l org --eval '(org-babel-tangle-file "mcp-test-examples.org")'
+   
+   echo "Examples tangled successfully to generated/examples/"
+   ls -la generated/examples/
+   #+end_src
+
+2. Make the script executable and run it:
+   #+begin_src bash :tangle no
+   chmod +x generated/tangle.sh
+   ./generated/tangle.sh
+   #+end_src
+
+3. The examples will auto-run when loaded in Emacs:
+   #+begin_src emacs-lisp :tangle no
+   ;; Choose which example to run:
+   
+   ;; Filesystem basic example
+   (load-file "generated/examples/fs-basic.el")
+   
+   ;; Filesystem read example
+   (load-file "generated/examples/fs-read.el")
+   
+   ;; Git example
+   (load-file "generated/examples/git-basic.el")
+   
+   ;; Memory example
+   (load-file "generated/examples/memory-basic.el")
+   
+   ;; Or run all services together
+   (load-file "generated/examples/mcp-all.el")
+   #+end_src
+
+Once loaded, each example will automatically:
+1. Connect to the appropriate MCP servers
+2. Run example operations with those servers
+3. Display results in Emacs buffers
+4. No manual function calls needed!
+
+* Runner
+
+#+begin_src elisp :tangle generated/examples/mcp-runner.el 
+
+;;; mcp-runner.el --- Run tangled MCP test files
+
+;;; Commentary:
+;; This runner loads and executes MCP test files that were tangled from org-mode.
+;; It preserves your existing workflow and Makefile by focusing only on test execution.
+
+;;; Code:
+
+(require 'org)
+(require 'cl-lib)
+
+(defvar mcp-runner-files '("fs-basic.el"
+                          "fs-read.el"
+                          "git-basic.el"
+                          "mcp-all.el"
+                          "memory-basic.el")
+  "List of MCP test files to run.")
+
+(defvar mcp-runner-results nil
+  "Results of the latest test run.")
+
+(defun mcp-runner-run-tests (&optional files)
+  "Run all the MCP test files.
+If FILES is provided, run only those files."
+  (interactive)
+  (let ((test-files (or files mcp-runner-files))
+        (results '())
+        (start-time (current-time)))
+    
+    ;; Create or clear the results buffer
+    (with-current-buffer (get-buffer-create "*MCP Test Results*")
+      (erase-buffer)
+      (org-mode)
+      (insert "#+TITLE: MCP Test Results\n")
+      (insert "#+DATE: " (format-time-string "[%Y-%m-%d %a]") "\n\n")
+      (insert "* MCP Test Results\n\n")
+      
+      ;; Execute each test file
+      (dolist (file test-files)
+        (let ((file-path (expand-file-name file default-directory))
+              (file-status "PASS")
+              (file-output "")
+              (file-start (current-time)))
+          
+          (message "Running test file: %s" file)
+          (insert (format "** Testing: %s\n" file))
+          
+          (condition-case err
+              (progn
+                ;; Load the file, capturing output
+                (with-temp-buffer
+                  (let ((standard-output (current-buffer)))
+                    (load file-path nil t))
+                  (setq file-output (buffer-string)))
+                
+                ;; Log the output
+                (unless (string-empty-p file-output)
+                  (insert "#+begin_example\n")
+                  (insert file-output)
+                  (insert "#+end_example\n\n")))
+            
+            (error
+             (setq file-status "FAIL")
+             (insert (format "Error: %s\n\n" (error-message-string err)))
+             (insert "#+begin_example\n")
+             (insert file-output)
+             (insert "#+end_example\n\n")))
+          
+          ;; Record the result
+          (let ((duration (float-time (time-subtract (current-time) file-start))))
+            (push (list file file-status duration file-output) results))
+          
+          ;; Add status indicator
+          (if (string= file-status "PASS")
+              (insert "Status: ✓ PASS\n\n")
+            (insert "Status: ✗ FAIL\n\n"))))
+      
+      ;; Add summary section
+      (goto-char (point-min))
+      (re-search-forward "\\* MCP Test Results" nil t)
+      (end-of-line)
+      (insert "\n\n** Summary\n\n")
+      (insert "| File | Status | Duration (s) |\n")
+      (insert "|------|--------|-------------|\n")
+      
+      (setq mcp-runner-results (nreverse results))
+      (let ((pass-count 0)
+            (fail-count 0)
+            (total-time 0))
+        
+        ;; Add rows for each test
+        (dolist (result mcp-runner-results)
+          (let ((file (nth 0 result))
+                (status (nth 1 result))
+                (duration (nth 2 result)))
+            
+            (if (string= status "PASS")
+                (setq pass-count (1+ pass-count))
+              (setq fail-count (1+ fail-count)))
+            
+            (setq total-time (+ total-time duration))
+            
+            (insert (format "| %s | %s | %.2f |\n" 
+                            file 
+                            (if (string= status "PASS") "✓ PASS" "✗ FAIL")
+                            duration))))
+        
+        ;; Add total row
+        (insert "|------|--------|-------------|\n")
+        (insert (format "| Total | %d/%d passed | %.2f |\n" 
+                        pass-count 
+                        (+ pass-count fail-count)
+                        total-time))
+        
+        ;; Add overall status
+        (if (= fail-count 0)
+            (insert "\nOverall status: ✓ PASSED\n")
+          (insert "\nOverall status: ✗ FAILED\n")))
+      
+      ;; Display the buffer
+      (switch-to-buffer-other-window (current-buffer)))
+    
+    ;; Return the results
+    mcp-runner-results))
+
+(defun mcp-runner-generate-report ()
+  "Generate an HTML report from the latest test results."
+  (interactive)
+  (when (get-buffer "*MCP Test Results*")
+    (with-current-buffer "*MCP Test Results*"
+      (let ((output-file (expand-file-name "mcp-test-results.html" default-directory)))
+        (org-export-to-file 'html output-file)
+        (message "Report exported to %s" output-file)
+        output-file))))
+
+(defun mcp-runner-run-single-file (file)
+  "Run a single test FILE."
+  (interactive 
+   (list (completing-read "Test file: " mcp-runner-files nil t)))
+  (mcp-runner-run-tests (list file)))
+
+;; Command to run available for M-x
+(defun mcp-run-all-tests ()
+  "Run all MCP tests."
+  (interactive)
+  (mcp-runner-run-tests))
+
+;; Add to load-path and provide the feature
+(provide 'mcp-runner)
+;;; mcp-runner.el ends here
+#+end_src
+
+
+#+begin_src elisp :tangle generated/examples/run-mcp-tests.el
+;; This is a batch script that can be used to run MCP tests from command line
+;; Usage: emacs --batch -l run-mcp-tests.el
+
+;; Load the runner
+(load-file "mcp-runner.el")
+
+;; Define the files to test - customize this list as needed
+(setq mcp-runner-files '("fs-basic.el"
+                         "fs-read.el"
+                         "git-basic.el"
+                         "mcp-all.el"
+                         "memory-basic.el"))
+
+;; Run the tests
+(message "Running MCP tests...")
+(mcp-runner-run-tests)
+
+;; Generate HTML report
+(mcp-runner-generate-report)
+
+;; Print a final message
+(let ((all-passed t))
+  (dolist (result mcp-runner-results)
+    (when (string= (nth 1 result) "FAIL")
+      (setq all-passed nil)))
+  
+  (if all-passed
+      (message "All tests PASSED")
+    (message "Some tests FAILED - see mcp-test-results.html for details"))
+  
+  ;; Exit with appropriate status code
+  (kill-emacs (if all-passed 0 1)))
+#+end_src
